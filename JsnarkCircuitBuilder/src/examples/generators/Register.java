@@ -4,11 +4,13 @@
 package examples.generators;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
 
 import circuit.eval.CircuitEvaluator;
 import circuit.structure.CircuitGenerator;
 import circuit.structure.Wire;
 import examples.gadgets.hash.MiMC7Gadget;
+import java_test.MiMC7Hash;
 
 public class Register extends CircuitGenerator {
 
@@ -20,11 +22,8 @@ public class Register extends CircuitGenerator {
     /******************* BigInteger Values  ******************/
     public BigInteger sk_id;
     private MiMC7Gadget MiMC7;
-    private int mode = 0 ;
-
-    public Register(String circuitName, int mode){
+    public Register(String circuitName){
         super(circuitName);
-        this.mode = mode;
     }
 
     @Override
@@ -40,17 +39,19 @@ public class Register extends CircuitGenerator {
 
     @Override
     public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
-        if (mode == 0) {
-            circuitEvaluator.setWireValue(SK_id, new BigInteger("111111",10));
-            circuitEvaluator.setWireValue(HashOut, new BigInteger("242e5dac01ff9bc696a866fbe0cebeb2ef3b836de1f9344f3bd8da5ddcfd1899", 16));
-        }
-        if (mode == 1) {
-            circuitEvaluator.setWireValue(SK_id, sk_id);
-        }
+        SecureRandom random = new SecureRandom();
+        byte[] random_bytes = new byte[30];
+
+        random.nextBytes(random_bytes);
+        BigInteger testcase_sk = new BigInteger(1, random_bytes);
+        BigInteger testcase_hash = new MiMC7Hash(testcase_sk).getOutput();
+
+        circuitEvaluator.setWireValue(SK_id, testcase_sk);
+        circuitEvaluator.setWireValue(HashOut, testcase_hash);
     }
 
     public static void main(String[] arga) throws Exception{
-        Register register = new Register("Register", 0);
+        Register register = new Register("Register");
         register.generateCircuit();
         register.evalCircuit();
         register.prepFiles();
