@@ -4,6 +4,11 @@
 package examples.generators;
 
 import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.security.acl.Group;
+import java.util.Random;
+import java.util.function.BiFunction;
+
 import util.Util;
 import circuit.eval.CircuitEvaluator;
 import circuit.structure.CircuitGenerator;
@@ -11,6 +16,8 @@ import circuit.structure.Wire;
 import examples.gadgets.diffieHellmanKeyExchange.ECGroupOperationGadget;
 import examples.gadgets.hash.MerkleTreePathGadget_MiMC7;
 import examples.gadgets.hash.MiMC7Gadget;
+
+import java_test.*;
 
 public class Vote extends CircuitGenerator {
 	/********************* INPUT ***************************/
@@ -21,22 +28,18 @@ public class Vote extends CircuitGenerator {
 	private Wire E_id;
 	private Wire root_in;
 	private Wire sn_in, pk_in;
-	/********************* OUTPUT ***************************/
-	Wire root_out;
+	private Wire root_out;
+	
 	/********************* Witness ***************************/
 	private Wire Sx, Sy;
 	private Wire Tx, Ty;
 	private Wire sk_id;
-
-	private Wire msg; 
-	
-	/********************* Vote Msg and random ***************************/
 	private Wire randomizedEnc;
-	//private int hashDigestDimension = SubsetSumHashGadget.DIMENSION;
+	private Wire msg; 
 
 	/********************* MerkleTree ***************************/
 	private Wire directionSelector;
-	private Wire[] intermediateHasheWires;
+	private Wire[] intermediateHashWires;
 	private int treeHeight;
 	private int numofelector, msgsize;
 
@@ -67,7 +70,7 @@ public class Vote extends CircuitGenerator {
 		msg = createProverWitnessWire("msg");
 
 		directionSelector = createProverWitnessWire("Direction selector");
-		intermediateHasheWires = createProverWitnessWireArray(treeHeight, "Intermediate Hashes");
+		intermediateHashWires = createProverWitnessWireArray(treeHeight, "Intermediate Hashes");
 
 		MiMC7Gadget sn_hash = new MiMC7Gadget(new Wire[] {Sx, Tx, sk_id, E_id});
 		Wire sn_out = sn_hash.getOutputWires()[0];
@@ -81,7 +84,7 @@ public class Vote extends CircuitGenerator {
 		Wire[] V_out = encV.getOutputWires();
 		Wire[] W_out = encW.getOutputWires();
 		Wire[] ekpk = {Sx, Tx, pk_out};
-		MerkleTreePathGadget_MiMC7 merkleTreeGadget = new MerkleTreePathGadget_MiMC7(directionSelector, ekpk, intermediateHasheWires, treeHeight);
+		MerkleTreePathGadget_MiMC7 merkleTreeGadget = new MerkleTreePathGadget_MiMC7(directionSelector, ekpk, intermediateHashWires, treeHeight);
 		root_out = merkleTreeGadget.getOutputWires()[0];
 		//makeOutputArray(root, "Root");
 
@@ -94,33 +97,84 @@ public class Vote extends CircuitGenerator {
 		addEqualityAssertion(root_out, root_in);
 	}
 
+	public void print_bigint(BigInteger... ins){
+		for(BigInteger b : ins){
+			System.out.println(b.toString(10));
+			if(b.compareTo(GroupElement.FIELD_PRIME) == 1)
+				System.out.println("Invalid input... so sad...");
+		}	
+	}
+
+	SecureRandom GlobalRand = new SecureRandom();
+	public BigInteger setRandombit(BigInteger maxValue){
+		byte[] rand_bytes = new byte[(maxValue.bitLength()/8)+1];
+		BigInteger out;
+		do{
+			GlobalRand.nextBytes(rand_bytes);
+			out = new BigInteger(1,rand_bytes);
+		}while(out.bitLength() != maxValue.bitLength() || out.compareTo(maxValue) == 1);
+		return out;
+	}
+
 	@Override
 	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
-		circuitEvaluator.setWireValue(Gx, new BigInteger("16fd271ae0ad87ddae03044ac6852ee1d2ac024d42cff099c50ea7510d2a70a5",16));
-		circuitEvaluator.setWireValue(Gy, new BigInteger("291d2a8217f35195cb3f45acde062e1709c7fdc7b1fe623c0a27021ae5446310",16));
-		circuitEvaluator.setWireValue(Ux, new BigInteger("13641eca1827ad0acbee4f0ad1753b2f283b62a5e6f9dc68fb0bbc5af07f366b",16));
-		circuitEvaluator.setWireValue(Uy, new BigInteger("deda3e84e9efac8d6b69d3ca21609770da4c62b83526be735a798b4f4668f48",16));
-		circuitEvaluator.setWireValue(Vx_in, new BigInteger("9ed22a3cc039218ad431f636cfcf1b0421ca72fd5925b5119b32bdf6f06a0a8",16));
-		circuitEvaluator.setWireValue(Vy_in, new BigInteger("2655f79ea87d85712fc303312d504bca37bd60d8a97e19fa3a50592851126713",16));
-		circuitEvaluator.setWireValue(Wx_in, new BigInteger("1df45d7aeea36ee42a69385b0298875b339bd1f0a4026437971cd3dcf86275b6",16));
-		circuitEvaluator.setWireValue(Wy_in, new BigInteger("6185cd8bd96257dd681d3f9d5c6b6e11cb2aa2e835977399290e1964a325310",16));
-		circuitEvaluator.setWireValue(E_id, new BigInteger("1"));
-		circuitEvaluator.setWireValue(pk_in, new BigInteger("242e5dac01ff9bc696a866fbe0cebeb2ef3b836de1f9344f3bd8da5ddcfd1899",16));
-		circuitEvaluator.setWireValue(sn_in, new BigInteger("2b6b60940830f15107ebdae8664cfe792011abb7848548039ecaaaaf1a590dec",16));	
-		circuitEvaluator.setWireValue(root_in, new BigInteger("279d0eb27abfabe7b2ce52d31a7e3ebb9f2a799efb2424667517a56680d3e821",16));
-		
-		circuitEvaluator.setWireValue(sk_id, new BigInteger("111111"));
-		circuitEvaluator.setWireValue(Sx, new BigInteger("1fca64aadf8c72571e0bb07a79cf3f1d97357470e5d7dd51a3bc15f38c7c6e22",16));
-		circuitEvaluator.setWireValue(Sy, new BigInteger("239aa42106195d896bcb735b4a3da49acdf6d83b475566995f26879089f844d4",16));
-		circuitEvaluator.setWireValue(Tx, new BigInteger("c6b29f54614c69fa95672d61dcacc7aa06d5236df49e25a8c7a1a8e0ba92db2",16));
-		circuitEvaluator.setWireValue(Ty, new BigInteger("2ff29f767782f1a68fca486bdb7ed2dd5ef60f78895df259d889c436daf19324",16));
-		circuitEvaluator.setWireValue(randomizedEnc, new BigInteger("2b8da27db352ccf66c6068e708b02c1a6ec60088c6050b5bbbf574c95022944",16));
-		circuitEvaluator.setWireValue(msg, new BigInteger("800000000000", 16));
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-		circuitEvaluator.setWireValue(directionSelector, Util.nextRandomBigInteger(treeHeight));		
+		Curve25519 EC_S, EC_T, EC_G;	  // Server Curve
+		Curve25519 EC_V, EC_W, EC_U;	  // Android Curve
+		BigInteger Big_Eid;				  // Android public value
+		MiMC7Hash sn_mimc, pk_mimc;		  // Android public value
+		BigInteger rand, Big_msg, Big_sk; // Android secret random value
+
+		BigInteger direction;			  // Block Chain public value
+		BigInteger[] intermediateHash = new BigInteger[treeHeight]; // Block Chain public value
+		EC_G = new Curve25519(GroupElement.G, false);
+		EC_U = new Curve25519(GroupElement.U, false);
+
+		//////////////////////////////////  Server Part  //////////////////////////////////
+		EC_S = EC_G.mul(setRandombit(GroupElement.SUBGROUP_ORDER)); // setRandombit(GroupElement.SUBGROUP_ORDER) : server seccret key 
+		EC_T = EC_S.mul(GroupElement.rho).add(EC_G);				// GroupElement.rho : server seccret value 	
+
+		//////////////////////////////////  Android Part  //////////////////////////////////
+		int idx = (GlobalRand.nextInt(15));							//     idx : Android seccret value
+		Big_Eid = new BigInteger(Integer.toHexString(idx),16);		// Big_Eid : Android public value
+		Big_msg = (new BigInteger("0")).setBit(16*idx);				// Big_msg : Android seccret value 
+		rand = setRandombit(GroupElement.SUBGROUP_ORDER);			//    rand : Android seccret value 
+		EC_V = (EC_G.mul(rand)).add(EC_S.mul(Big_msg));
+		EC_W = (EC_U.mul(rand)).add(EC_T.mul(Big_msg));
+
+		int i_sk = (GlobalRand.nextInt(1000000));
+		Big_sk = new BigInteger(Integer.toHexString(i_sk),16);
+		sn_mimc = new MiMC7Hash(EC_S.getPoint().x, EC_T.getPoint().x, Big_sk, Big_Eid); 		//{Sx, Tx, sk_id, E_id}
+		pk_mimc = new MiMC7Hash(Big_sk);
+
+		direction = setRandombit(new BigInteger(Integer.toHexString(1<<(treeHeight-1)),16));	// bitLength of this variable  must be (2^(treeHeight) - 1)bits
+		for(int i = 0; i < treeHeight; i++ ) 
+			intermediateHash[i] = setRandombit(GroupElement.FIELD_PRIME);
+		BigInteger[] tree_input = {EC_S.getPoint().x, EC_T.getPoint().x, pk_mimc.getOutput() };
+		MerkleTreePath merklepath = new MerkleTreePath(direction, tree_input, intermediateHash, treeHeight);
+
+		//////////////////////////////////  Android Part  //////////////////////////////////
+		circuitEvaluator.setWireValue(Gx, EC_G.getPoint().x);
+		circuitEvaluator.setWireValue(Gy, EC_G.getPoint().y);
+		circuitEvaluator.setWireValue(Ux, EC_U.getPoint().x);
+		circuitEvaluator.setWireValue(Uy, EC_U.getPoint().y);
+		circuitEvaluator.setWireValue(Vx_in, EC_V.getPoint().x);
+		circuitEvaluator.setWireValue(Vy_in, EC_V.getPoint().y);
+		circuitEvaluator.setWireValue(Wx_in, EC_W.getPoint().x);
+		circuitEvaluator.setWireValue(Wy_in, EC_W.getPoint().y);
+		circuitEvaluator.setWireValue(E_id, Big_Eid);
+		circuitEvaluator.setWireValue(pk_in, pk_mimc.getOutput());
+		circuitEvaluator.setWireValue(sn_in, sn_mimc.getOutput());
+		circuitEvaluator.setWireValue(root_in, merklepath.getOutput());
+		circuitEvaluator.setWireValue(sk_id, Big_sk);
+		circuitEvaluator.setWireValue(Sx, EC_S.getPoint().x);
+		circuitEvaluator.setWireValue(Sy, EC_S.getPoint().y);
+		circuitEvaluator.setWireValue(Tx, EC_T.getPoint().x);
+		circuitEvaluator.setWireValue(Ty, EC_T.getPoint().y);
+		circuitEvaluator.setWireValue(randomizedEnc, rand);
+		circuitEvaluator.setWireValue(msg, Big_msg);
+		circuitEvaluator.setWireValue(directionSelector, direction);		
 		for (int i = 0; i < treeHeight; i++) { 
-			circuitEvaluator.setWireValue(intermediateHasheWires[i], Integer.MAX_VALUE);
+			circuitEvaluator.setWireValue(intermediateHashWires[i], intermediateHash[i]);
 		}
 	}
 
