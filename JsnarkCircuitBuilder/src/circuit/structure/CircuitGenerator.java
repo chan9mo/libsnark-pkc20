@@ -446,12 +446,12 @@ public abstract class CircuitGenerator {
 		}
 	}
 
-	public void runLibsnarksetup(int n) {
+	public void runLibsnarksetup() {
 
 		try {
 			Process p;
 			p = Runtime.getRuntime()
-					.exec(new String[] { Config.LIBSNARK_EXEC, circuitName + ".arith", circuitName + ".in" , "setup", Integer.toString(n)});
+					.exec(new String[] { Config.LIBSNARK_EXEC, circuitName + ".arith", circuitName + ".in" , "setup"});
 			p.waitFor();
 			System.out.println(
 					"\n-----------------------------------RUNNING SETUP -----------------------------------------");
