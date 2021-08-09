@@ -468,12 +468,12 @@ public abstract class CircuitGenerator {
 		}
 	}
 
-	public void runLibsnarkproof(int n) {
+	public void runLibsnarkproof() {
 
 		try {
 			Process p;
 			p = Runtime.getRuntime()
-					.exec(new String[] { Config.LIBSNARK_EXEC, circuitName + ".arith", circuitName + ".in" , "run", Integer.toString(n)});
+					.exec(new String[] { Config.LIBSNARK_EXEC, circuitName + ".arith", circuitName + ".in" , "run"});
 			p.waitFor();
 			System.out.println(
 					"\n-----------------------------------RUNNING PROOF -----------------------------------------");
