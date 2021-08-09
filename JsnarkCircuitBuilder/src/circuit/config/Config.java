@@ -32,6 +32,7 @@ public class Config {
 	public static final int LOG2_FIELD_PRIME = FIELD_PRIME.toString(2).length();
 	public static final String LIBSNARK_EXEC = properties.getProperty("PATH_TO_LIBSNARK_EXEC");
 	public static final BigInteger CURVE_ORDER = new BigInteger(properties.getProperty("CURVE_ORDER"));
+	public static final BigInteger SUBGROUP_ORDER = new BigInteger(properties.getProperty("SUBGROUP_ORDER"));
 	
 	public static boolean runningMultiGenerators = properties.getProperty("RUNNING_GENERATORS_IN_PARALLEL").equals("1");	
 	public static boolean hexOutputEnabled = properties.getProperty("PRINT_HEX").equals("1");
