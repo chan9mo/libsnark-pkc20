@@ -215,6 +215,18 @@ target_link_libraries(
 )
 
 add_executable(
+  profile_dario
+  # EXCLUDE_FROM_ALL
+
+  zk_proof_systems/dario/profiling/profile_dario.cpp
+)
+ target_link_libraries(
+  profile_dario
+
+  snark
+)
+
+add_executable(
   profile_r1cs_ppzksnark
   EXCLUDE_FROM_ALL
 
@@ -222,6 +234,7 @@ add_executable(
 )
 target_link_libraries(
   profile_r1cs_ppzksnark
+  EXCLUDE_FROM_ALL
 
   snark
 )
@@ -447,11 +460,16 @@ add_executable(
   gadgetlib2/tests/integration_UTEST.cpp
   relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp
   relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.tcc
+  zk_proof_systems/dario/examples/run_dario.hpp
+  zk_proof_systems/dario/examples/run_dario.tcc
   zk_proof_systems/ppzksnark/r1cs_ppzksnark/examples/run_r1cs_ppzksnark.hpp
   zk_proof_systems/ppzksnark/r1cs_ppzksnark/examples/run_r1cs_ppzksnark.tcc
+ 
   #추가한거
   #zk_proof_systems/ppzksnark/voting/examples/run_r1cs_ppzksnark.hpp
   #zk_proof_systems/ppzksnark/voting/examples/run_r1cs_ppzksnark.tcc
+  #dario/run_dario.hpp
+  #dario/run_dario.tcc
   
   gadgetlib2/examples/simple_example.cpp
   gadgetlib2/examples/simple_example.hpp
@@ -522,6 +540,18 @@ add_executable(
 )
 target_link_libraries(
   relations_ssp_test
+
+  snark
+)
+
+add_executable(
+  zk_proof_systems_dario_test
+  EXCLUDE_FROM_ALL
+
+  zk_proof_systems/dario/tests/test_dario.cpp
+)
+target_link_libraries(
+  zk_proof_systems_dario_test
 
   snark
 )
@@ -598,6 +628,7 @@ target_link_libraries(
   snark
 )
 
+
 #추가한거
 #add_executable(
 #  zk_proof_systems_r1cs_gg_ppzksnark_test
@@ -609,7 +640,7 @@ target_link_libraries(
 #  zk_proof_systems_r1cs_gg_ppzksnark_test
 
 #  snark
-#)
+# )
 
 add_executable(
   zk_proof_systems_ram_ppzksnark_test
@@ -732,6 +763,7 @@ set_target_properties(run_ppzksnark
     RUNTIME_OUTPUT_DIRECTORY "jsnark_interface/"
 )
 
+
 include(CTest)
 add_test(
   NAME common_routing_algorithms_test
@@ -780,6 +812,10 @@ add_test(
 add_test(
   NAME relations_ssp_test
   COMMAND relations_ssp_test
+)
+add_test(
+  NAME zk_proof_systems_dario_test
+  COMMAND zk_proof_systems_dario_test
 )
 add_test(
   NAME zk_proof_systems_bacs_ppzksnark_test
@@ -843,6 +879,7 @@ add_dependencies(check gadgetlib2_variable_test)
 add_dependencies(check relations_qap_test)
 add_dependencies(check relations_sap_test)
 add_dependencies(check relations_ssp_test)
+add_dependencies(check zk_proof_systems_dario_test)
 add_dependencies(check zk_proof_systems_bacs_ppzksnark_test)
 add_dependencies(check zk_proof_systems_r1cs_ppzksnark_test)
 add_dependencies(check zk_proof_systems_r1cs_se_ppzksnark_test)
