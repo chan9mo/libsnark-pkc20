@@ -126,7 +126,7 @@ std::istream& operator>>(std::istream &in, bpe_proof<ppT> &proof)
 }
 
 template<typename ppT> bpc_key<ppT> bpe_generator (int &dimension, int &length) {
-    libff::enter_block("BPE_generator : BPC");
+    libff::enter_block("Call to BPE-generator : BPC");
 
    //random element: g1, h, g2, alpha(a), beta(s), gamma(t)
     const libff::Fr<ppT> alpha = libff::Fr<ppT>::random_element();
@@ -162,6 +162,8 @@ template<typename ppT> bpc_key<ppT> bpe_generator (int &dimension, int &length) 
         uni_g1_hat_ij.clear();
     }
 
+    libff::leave_block("Call to BPE-generator : BPC");
+
     bpc_key<ppT> ck = bpc_key<ppT>(
                             std::move(dimension),
                             std::move(length),
@@ -175,7 +177,7 @@ template<typename ppT> bpc_key<ppT> bpe_generator (int &dimension, int &length) 
 }
 
 template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statement<ppT> &u, bpe_witness<ppT> &w){
-    libff::enter_block("BPE_Prover");
+    libff::enter_block("Call to BPE-Prover");
 
     //W 계산 ?: BPC Poly 사용
     libff::G1_2dvector<ppT> Wpoly;
@@ -210,6 +212,8 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
     libff::Fr<ppT> sigma = ppT::modular((x - (w.rho_prime - w.rho) * hash_e), Zq); //(x - (w.rho_prime - w.rho) * e) modular q
     libff::Fr<ppT> tau = ppT::modular((y - random_omega * hash_e), Zq);//(y - random_omega * e) modular q
 
+    libff::leave_block("Call to BPE-Prover");
+
     bpe_proof<ppT> proof = bpe_proof<ppT>(std::move(delta), std::move(hash_e), std::move(sigma), std::move(tau));
     return proof;
 
@@ -217,15 +221,19 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
 
 template <typename ppT> bool bpe_verifier(bpc_key<ppT> &ck, bpe_statement<ppT> &u, bpe_proof<ppT> &proof){
 
-bool b1 = bpc_commit_verifier(&ck, u.commit);
-bool b2 = bpc_commit_verifier(&ck, u.commit_prime);
-bool b3 = bpc_commit_verifier(&ck, proof.commit);
+    libff::enter_block("Call to BPE_Verifier");
 
-const libff::G1<ppT> alpha = ppT::reduced_pairing(proof.commit.c, (ck.g2_s - (ck.g2 * u.point))) * (ppT::reduced_pairing(u.commit.c - u.commit_hat.c, ck.g2)).inverse();
-const libff::G1<ppT> beta = ppT::reduced_pairing(ck.h * proof.sigma * ((ck.h_s - (ck.h * u.point)) * proof.tau), ck.g2) + (alpha * proof.hash);
+    bool b1 = bpc_commit_verifier(&ck, u.commit);
+    bool b2 = bpc_commit_verifier(&ck, u.commit_prime);
+    bool b3 = bpc_commit_verifier(&ck, proof.commit);
 
-bool b4 = proof.hash == (hash(&u, proof.commit, beta));
-bool result = b1 & b2 & b3 & b4 ;
+    const libff::G1<ppT> alpha = ppT::reduced_pairing(proof.commit.c, (ck.g2_s - (ck.g2 * u.point))) * (ppT::reduced_pairing(u.commit.c - u.commit_hat.c, ck.g2)).inverse();
+    const libff::G1<ppT> beta = ppT::reduced_pairing(ck.h * proof.sigma * ((ck.h_s - (ck.h * u.point)) * proof.tau), ck.g2) + (alpha * proof.hash);
+
+    bool b4 = proof.hash == (hash(&u, proof.commit, beta));
+    bool result = b1 & b2 & b3 & b4 ;
+
+    libff::leave_block("Call to BPE_Verifier");
 
 return result;
 }

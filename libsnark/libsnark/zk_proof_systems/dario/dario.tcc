@@ -275,7 +275,7 @@ dario_proof<ppT> dario_prover(dario_crs<ppT> &crs,
                         dario_witness<ppT> &wit,
                         dario_primary_input<ppT> &primary_input) {
     
-libff::enter_block("Dario Prover");
+libff::enter_block("Call to Dario Prover");
 
 //R(Polynomial)값을 넣어준다.
     libff::G1_2dvector<ppT> Rpoly;
@@ -296,7 +296,7 @@ libff::enter_block("Dario Prover");
     std::hash<ppT> random = std::hash<ppT>(st.commit, st.pubpoly, commitT);
 
 //Polynomial Evaluation 함수를 통해서 p, r, t`, p_j evaluate
-    libff::enter_block("Evaluate Polynomial");
+    libff::enter_block("Evaluate Polynomial: p, r, t_prime, p_j");
 
     libff::Fr<ppT> p = poly_eval(st.pubpoly, random);
     libff::Fr<ppT> r = poly_eval(Rpoly, random);
@@ -307,7 +307,7 @@ libff::enter_block("Dario Prover");
     }
     p_j[sizeof(wit.p_j)+1] = t_prime;
 
-    libff::leave_block("Evaluate Polynomial");
+    libff::leave_block("Evaluate Polynomial p, r, t_prime, p_j");
 
 //evaluation 결과를 commit하여 C`, rho` 생성
     libff::enter_block("Commit Evaluation");
@@ -360,8 +360,7 @@ libff::enter_block("Dario Prover");
                                                                      std::move(primary_input));
 
     libff::leave_block("Compute Lego_Proof");
-
-    libff::leave_block("Dario Prover");
+    libff::leave_block("Call to Dario Prover");
 
 //dario_proof 반환
     dario_proof<ppT> dario_proof = (std::move(commitT), 
@@ -378,11 +377,14 @@ bool dario_verifier(dario_crs<ppT> &crs,
               dario_statement<ppT> &st, 
               dario_proof<ppT> &dario_proof) {
 
-    libff::enter_block("Dario Verifier");
+    libff::enter_block("Call to Dario Verifier");
+
 //C_t, statement를 hash하여 eval.point인 random를 얻는다.
     std::hash<ppT> random =std::hash<ppT>(st.commit, st.pubpoly, dario_proof.commitT);
 
 //Polynomial Evaluation 함수를 통해서 p, r evaluate
+    libff::enter_block("Polynomial Evaluation: p, r");
+    
     libff::G1_2dvector<ppT> Rpoly;
     libff::G1_vector<ppT> uni_Rpoly;
 
@@ -397,7 +399,10 @@ bool dario_verifier(dario_crs<ppT> &crs,
     libff::Fr<ppT> p = poly_eval(st.pubpoly, random);
     libff::Fr<ppT> r = poly_eval(Rpoly, random);
 
+    libff::leave_block("Polynomial Evaluation: p, r");
+
 //MUE에 대한 Verify
+    libff::enter_block("MUE-Verify");
     libff::GT<ppT> pair_commit = ppT::reduced_pairing(dario_proof.commitT, st.commit);
     bpe_statement<ppT> statement_commit = bpe_statement<ppT>(std::move(pair_commit), 
                                                              std::move(dario_proof.commit_prime), 
@@ -406,7 +411,10 @@ bool dario_verifier(dario_crs<ppT> &crs,
                            std::move(statement_commit), 
                            std::move(dario_proof.proof_commit));
 
+    libff::leave_block("MUE-Verify");
+
 //Lego에 대한 Verify
+    libff::enter_block("Lego-Verify");
     statement<ppT> lego_statement = statement<ppT>(std::move(dario_proof.commit_prime),
                                                    std::move(p),
                                                    std::move(r));
@@ -415,9 +423,12 @@ bool dario_verifier(dario_crs<ppT> &crs,
                                      std::move(lego_statement),
                                      std::move(dario_proof.proof_prime));
 
+    libff::leave_block("Lego-Verify");
+
 //Verify 결과 반환
 
-    libff::leave_block("Dario Verifier");
+    libff::leave_block("Call to Dario Verifier");
+
     bool result = b1 & b2;
     return result;
 }
