@@ -170,7 +170,7 @@ template <typename ppT>
 class dario_witness
 {
     public:
-    libff::G1_2dvector<ppT> n_polys;
+    libff::G1_2dvector<ppT> polys;
     libff::G1_2dvector<ppT> Tpoly;
 
     dario_witness() = default;
@@ -178,10 +178,10 @@ class dario_witness
     dario_witness(const dario_witness<ppT> &other) = default;
     dario_witness(dario_witness<ppT> &&other) = default;
     dario_witness(
-        libff::G1_2dvector<ppT> &&n_polys,
+        libff::G1_2dvector<ppT> &&polys,
         libff::G1_2dvector<ppT> &&Tpoly) :
 
-            n_polys(std::move(n_polys)),
+            polys(std::move(polys)),
             Tpoly(std::move(Tpoly)) {};
     
     size_t G1_size() const

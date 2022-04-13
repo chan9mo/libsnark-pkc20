@@ -88,14 +88,14 @@ std::istream& operator>>(std::istream &in, dario_statement<ppT> &st)
 template<typename ppT>
 bool dario_witness<ppT>::operator==(const dario_witness<ppT> &other) const
 {
-    return (this->n_polys == other.n_polys &&
+    return (this->polys == other.polys &&
             this->Tpoly == other.Tpoly);
 }
 
 template<typename ppT>
 std::ostream& operator<<(std::ostream &out, const dario_witness<ppT> &wit)
 {
-    out << wit.n_polys << OUTPUT_NEWLINE;
+    out << wit.polys << OUTPUT_NEWLINE;
     out << wit.Tpoly << OUTPUT_NEWLINE;
 
     return out;
@@ -104,7 +104,7 @@ std::ostream& operator<<(std::ostream &out, const dario_witness<ppT> &wit)
 template<typename ppT>
 std::istream& operator>>(std::istream &in, dario_witness<ppT> &wit)
 {
-    in >> wit.n_polys;
+    in >> wit.polys;
     libff::consume_OUTPUT_NEWLINE(in);
     in >> wit.Tpoly;
     libff::consume_OUTPUT_NEWLINE(in);
@@ -303,7 +303,7 @@ libff::enter_block("Call to Dario Prover");
     libff::Fr<ppT> t_prime = poly_eval(wit.Tpoly, random);
     libff::Fr_vector<ppT> p_j;
     for(int n=0;n<sizeof(wit.p_j);n++) {
-        p_j.emplace_back(poly_eval(wit.n_polys[n], random));
+        p_j.emplace_back(poly_eval(wit.polys[n], random));
     }
     p_j[sizeof(wit.p_j)+1] = t_prime;
 
