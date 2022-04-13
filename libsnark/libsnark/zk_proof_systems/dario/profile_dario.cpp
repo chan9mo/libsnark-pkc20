@@ -66,7 +66,7 @@ int main(int argc, const char * argv[])
     libff::leave_block("Generate R1CS example");
 
     libff::print_header("(enter) Profile Dario");
-    const bool test_serialization = true;
+    bool test_serialization = true;
     run_dario<default_dario_pp>(example, test_serialization);
     libff::print_header("(leave) Profile Dario");
 }

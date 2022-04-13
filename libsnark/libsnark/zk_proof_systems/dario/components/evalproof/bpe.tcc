@@ -24,6 +24,107 @@ See bpc.hpp.
 
 namespace libsnark {
 
+template<typename ppT>
+bool bpe_statement<ppT>::operator==(const bpe_statement<ppT> &other) const
+{
+    return (this->commit == other.commit &&
+            this->commit_hat == other.commit_hat &&
+            this->point == other.point);
+}
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_statement<ppT> &st)
+{
+    out << st.commit << OUTPUT_NEWLINE;
+    out << st.commit_prime << OUTPUT_NEWLINE;
+    out << st.point << OUTPUT_NEWLINE;
+
+    return out;
+}
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_statement<ppT> &st)
+{
+    in >> st.commit;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> st.commit_prime;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> st.point;
+    libff::consume_OUTPUT_NEWLINE(in);
+
+    return in;
+}
+
+template<typename ppT>
+bool bpe_witness<ppT>::operator==(const bpe_witness<ppT> &other) const
+{
+    return (this->coef_p == other.coef_p &&
+            this->coef_q == other.coef_q &&
+            this->rho == other.rho &&
+            this->rho_prime == other.rho_prime);
+}
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_witness<ppT> &wit)
+{
+    out << wit.coef_p << OUTPUT_NEWLINE;
+    out << wit.coef_q << OUTPUT_NEWLINE;
+    out << wit.rho << OUTPUT_NEWLINE;
+    out << wit.rho_prime << OUTPUT_NEWLINE;
+
+    return out;
+}
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_witness<ppT> &wit)
+{
+    in >> wit.coef_p;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> wit.coef_q;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> wit.rho;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> wit.rho_prime;
+    libff::consume_OUTPUT_NEWLINE(in);
+
+    return in;
+}
+
+template<typename ppT>
+bool bpe_proof<ppT>::operator==(const bpe_proof<ppT> &other) const
+{
+    return (this->commit == other.commit &&
+            this->hash == other.hash &&
+            this->sigma == other.sigma &&
+            this->tau == other.tau);
+}
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_proof<ppT> &proof)
+{
+    out << proof.commit << OUTPUT_NEWLINE;
+    out << proof.hash << OUTPUT_NEWLINE;
+    out << proof.sigma << OUTPUT_NEWLINE;
+    out << proof.tau << OUTPUT_NEWLINE;
+
+    return out;
+}
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_proof<ppT> &proof)
+{
+    in >> proof.commit;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> proof.hash;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> proof.sigma;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> proof.tau;
+    libff::consume_OUTPUT_NEWLINE(in);
+
+    return in;
+}
+
 template<typename ppT> bpc_key<ppT> bpe_generator (int &dimension, int &length) {
     libff::enter_block("BPE_generator : BPC");
 
@@ -38,21 +139,27 @@ template<typename ppT> bpc_key<ppT> bpe_generator (int &dimension, int &length) 
 
     //calculated element: g1hat, g2hat, hhat, h_s, g2_s
     libff::G1<ppT> g1_hat = alpha * g1;
-    libff::G2<ppT> g2_hat = alpha * g1;
+    libff::G2<ppT> g2_hat = alpha * g2;
     libff::G1<ppT> h_hat = alpha * h;
     libff::G1<ppT> h_s = beta * h;
     libff::G2<ppT> g2_s = beta * g2;
 
     //vector element: g1_ij, g1_hat_ij
     
-    libff::G1_vector<ppT> g1_ij = libff::G1_vector<ppT>::one();
-    libff::G1_vector<ppT> g1_hat_ij = libff::G1_vector<ppT>::one();
+    libff::G1_2dvector<ppT> g1_ij;
+    libff::G1_vector<ppT> uni_g1_ij;
+    libff::G1_2dvector<ppT> g1_hat_ij;
+    libff::G1_vector<ppT> uni_g1_hat_ij;
 
     for (int i=0; i<dimension; i++) {
         for (int j=0; j<length; j++) {
-            g1_ij[i][j] = g1 * (beta * i) * (delta * j) ;
-            g1_hat_ij[i][j] = g1_hat * (beta * i) * (delta * j);
+            uni_g1_ij.emplace_back(g1 * (beta * i) * (delta * j)) ;
+            uni_g1_hat_ij.emplace_back(g1_hat * (beta * i) * (delta * j));
         }
+        g1_ij.emplace_back(uni_g1_ij);
+        g1_hat_ij.emplace_back(uni_g1_hat_ij);
+        uni_g1_ij.clear();
+        uni_g1_hat_ij.clear();
     }
 
     bpc_key<ppT> ck = bpc_key<ppT>(
@@ -71,12 +178,21 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
     libff::enter_block("BPE_Prover");
 
     //W 계산 ?: BPC Poly 사용
-    bpc_poly<ppT> poly = libff::Fr<ppT>::random_element();
+    libff::G1_2dvector<ppT> Wpoly;
+    libff::G1_vector<ppT> uni_Wpoly;
+
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            uni_Wpoly.emplace_back(libff::G1<ppT>::random_element());
+        }
+        Wpoly.emplace_back(uni_Wpoly);
+        uni_Wpoly.clear();
+    }
     libff::G1<ppT> c = libff::G1<ppT>::one();
     libff::G1<ppT> c_hat = libff::G1<ppT>::one(); 
 
     //W 커밋, randomness: omega 추가
-    bpc_commit<ppT> delta = bpc_commit<ppT>(ck, poly);
+    bpc_commit<ppT> delta = bpc_commit<ppT>(ck, Wpoly);
     libff::Fr<ppT> random_omega = libff::Fr<ppT>::random_element();
 
     //g_tilde, x, y, beta(U) 계산
@@ -113,7 +229,7 @@ bool result = b1 & b2 & b3 & b4 ;
 
 return result;
 }
-
+}
 #endif
 
 

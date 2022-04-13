@@ -66,7 +66,7 @@ int main(int argc, const char * argv[])
     libff::leave_block("Generate Dario example");
 
     libff::print_header("(enter) Profile Dario");
-    const bool test_serialization = true;
+    bool test_serialization = true;
 
     run_dario<default_dario_pp>(example, test_serialization);
     //run_dario<default_dario_pp>(r1cs_example<Fp_model<4, ((const bigint<4>&)(& bn128_modulus_r))> >&, const bool&)

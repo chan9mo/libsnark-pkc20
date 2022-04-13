@@ -45,6 +45,15 @@ namespace libsnark
 {
 
 /******************************** Statement ********************************/
+template<typename ppT>
+class bpe_statement;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_statement<ppT> &statement);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_statement<ppT> &statement);
+
 
 template <typename ppT>
 class bpe_statement
@@ -54,6 +63,10 @@ class bpe_statement
     libff::G1<ppT> commit_prime;
     libff::Fr<ppT> point;
 
+    bpe_statement() = default;
+    bpe_statement<ppT>& operator=(const bpe_statement<ppT> &other) = default;
+    bpe_statement(const bpe_statement<ppT> &other) = default;
+    bpe_statement(bpe_statement<ppT> &&other) = default;
     bpe_statement(
         libff::G1<ppT> &&commit,
         libff::G1<ppT> &&commit_prime,
@@ -62,6 +75,32 @@ class bpe_statement
             commit(std::move(commit)),
             commit_prime(std::move(commit_prime)),
             point(std::move(point)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool operator==(const bpe_statement<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const bpe_statement<ppT> &commit);
+    friend std::istream& operator>> <ppT>(std::istream &in, bpe_statement<ppT> &commit);
 };
 
 /******************************** Polynomial ********************************/
@@ -70,27 +109,39 @@ template <typename ppT>
 class bpe_poly
 {
     public:
-    libff::G1_vector<libff::G1_vector<ppT>> coef;
+    libff::G1_2dvector<ppT> coef;
 
-    bpc_poly(
-        libff::G1_vector<libff::G1_vector<ppT>> &&coef) :
+    libff::G1_2dvector(
+        libff::G1_2dvector<ppT> &&coef) :
         coef(std::move(coef)) {};
 };
 vector를 원소로 가지는 vector */
 
 /******************************** Witness ********************************/
+template<typename ppT>
+class bpe_witness;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_statement<ppT> &witness);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_statement<ppT> &witness);
 
 template <typename ppT>
 class bpe_witness
 {
     public:
-    libff::G1_vector<libff::G1_vector<ppT>> coef_p;
+    libff::G1_2dvector<ppT> coef_p;
     libff::G1_vector<ppT> coef_q;
     libff::G1<ppT> rho;
     libff::G1<ppT> rho_prime;
 
+    bpe_witness() = default;
+    bpe_witness<ppT>& operator=(const bpe_witness<ppT> &other) = default;
+    bpe_witness(const bpe_witness<ppT> &other) = default;
+    bpe_witness(bpe_witness<ppT> &&other) = default;
     bpe_witness(
-        libff::G1_vector<libff::G1_vector<ppT>> &&coef_p,
+        libff::G1_2dvector<ppT> &&coef_p,
         libff::G1_vector<ppT> &&coef_q,
         libff::G1<ppT> &&rho,
         libff::G1<ppT> &&rho_prime) :
@@ -99,9 +150,43 @@ class bpe_witness
         coef_q(std::move(coef_q)),
         rho(std::move(rho)),
         rho_prime(std::move(rho_prime)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool operator==(const bpe_witness<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const bpe_witness<ppT> &commit);
+    friend std::istream& operator>> <ppT>(std::istream &in, bpe_witness<ppT> &commit);
 };
 
 /******************************** Proof ********************************/
+template<typename ppT>
+class bpe_proof;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpe_proof<ppT> &proof);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpe_proof<ppT> &proof);
 
 template <typename ppT>
 class bpe_proof
@@ -112,8 +197,12 @@ class bpe_proof
     libff::G1<ppT> sigma;
     libff::G1<ppT> tau;
 
+    bpe_proof() = default;
+    bpe_proof<ppT>& operator=(const bpe_proof<ppT> &other) = default;
+    bpe_proof(const bpe_proof<ppT> &other) = default;
+    bpe_proof(bpe_proof<ppT> &&other) = default;
     bpe_proof(
-        bpc_commit<ppT> commit,
+        bpc_commit<ppT> &&commit,
         std::hash<ppT> &&hash,
         libff::G1<ppT> &&sigma,
         libff::G1<ppT> &&tau) :
@@ -122,6 +211,40 @@ class bpe_proof
         hash(std::move(hash)),
         sigma(std::move(sigma)),
         tau(std::move(tau)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool is_well_formed() const
+    {
+        return (commit.is_well_formed() &&
+                hash.is_well_formed() &&
+                sigma.is_well_formed() &&
+                tau.is_well_formed());
+    }
+
+    bool operator==(const bpe_proof<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const bpe_proof<ppT> &commit);
+    friend std::istream& operator>> <ppT>(std::istream &in, bpe_proof<ppT> &commit);
 };
 
 /***************************** Main algorithms ******************************/

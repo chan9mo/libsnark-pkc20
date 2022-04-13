@@ -25,8 +25,8 @@ namespace libsnark {
  */
 
 template<typename ppT>
-bool run_dario(const r1cs_example<libff::Fr<ppT>> &example,
-               const bool test_serialization);
+bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
+               bool test_serialization);
 
 } // libsnark
 

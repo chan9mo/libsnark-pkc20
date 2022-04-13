@@ -47,73 +47,235 @@ References:
 namespace libsnark {
 
 /******************************** CRS ********************************/
+template<typename ppT>
+class dario_crs;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const dario_crs<ppT> &crs);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, dario_crs<ppT> &crs);
+
 template <typename ppT>
 class dario_crs
 {
     public:
-    bpc_key<ppT> crs_bpc = bpc_key<ppT>();
-    lego_cp_snark_keypair<ppT> crs_lego = lego_cp_snark_keypair<ppT>();
+    bpc_key<ppT> crs_bpc;
+    lego_cp_snark_keypair<ppT> crs_lego;
 
+    dario_crs() = default;
+    dario_crs<ppT>& operator=(const dario_crs<ppT> &other) = default;
+    dario_crs(const dario_crs<ppT> &other) = default;
+    dario_crs(dario_crs<ppT> &&other) = default;
     dario_crs(
-        bpc_key<ppT> crs_bpc,
-        lego_cp_snark_keypair<ppT> crs_lego) :
+        bpc_key<ppT> &&crs_bpc,
+        lego_cp_snark_keypair<ppT> &&crs_lego) :
 
             crs_bpc(std::move(crs_bpc)),
             crs_lego(std::move(crs_lego)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool operator==(const dario_crs<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const dario_crs<ppT> &crs);
+    friend std::istream& operator>> <ppT>(std::istream &in, dario_crs<ppT> &crs);
 };
 
 /******************************** dario_statement ********************************/
+template<typename ppT>
+class dario_statement;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const dario_statement<ppT> &statement);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, dario_statement<ppT> &statement);
+
 template <typename ppT>
 class dario_statement
 {
     public:
-    bpc_commit<ppT> commit = bpc_commit<ppT>();
-    bpc_poly<ppT> pubpoly = bpc_poly<ppT>();
+    bpc_commit<ppT> commit;
+    libff::G1_2dvector<ppT> pubpoly;
 
+    dario_statement() = default;
+    dario_statement<ppT>& operator=(const dario_statement<ppT> &other) = default;
+    dario_statement(const dario_statement<ppT> &other) = default;
+    dario_statement(dario_statement<ppT> &&other) = default;
     dario_statement(
-        bpc_commit<ppT> commit,
-        bpc_poly<ppT> pubpoly) :
+        bpc_commit<ppT> &&commit,
+        libff::G1_2dvector<ppT> &&pubpoly) :
 
             commit(std::move(commit)),
             pubpoly(std::move(pubpoly)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool operator==(const dario_statement<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const dario_statement<ppT> &st);
+    friend std::istream& operator>> <ppT>(std::istream &in, dario_statement<ppT> &st);
 };
 
 /******************************** dario_witness ********************************/
+template<typename ppT>
+class dario_witness;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const dario_witness<ppT> &witness);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, dario_witness<ppT> &witness);
+
 template <typename ppT>
 class dario_witness
 {
     public:
-    libff::G1_vector<bpc_unipoly<ppT>> n_polys = libff::G1_vector<bpc_unipoly<ppT>>();
-    bpc_poly<ppT> Tpoly = bpc_poly<ppT>();
+    libff::G1_2dvector<ppT> n_polys;
+    libff::G1_2dvector<ppT> Tpoly;
 
+    dario_witness() = default;
+    dario_witness<ppT>& operator=(const dario_witness<ppT> &other) = default;
+    dario_witness(const dario_witness<ppT> &other) = default;
+    dario_witness(dario_witness<ppT> &&other) = default;
     dario_witness(
-        libff::G1_vector<bpc_unipoly<ppT>> n_polys,
-        bpc_poly<ppT> Tpoly) :
+        libff::G1_2dvector<ppT> &&n_polys,
+        libff::G1_2dvector<ppT> &&Tpoly) :
 
             n_polys(std::move(n_polys)),
             Tpoly(std::move(Tpoly)) {};
+    
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool operator==(const dario_witness<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const dario_witness<ppT> &wit);
+    friend std::istream& operator>> <ppT>(std::istream &in, dario_witness<ppT> &wit);
 };
 
 /******************************** dario_proof ********************************/
+template<typename ppT>
+class dario_proof;
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const dario_proof<ppT> &proof);
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, dario_proof<ppT> &proof);
+
 template <typename ppT>
 class dario_proof
 {
     public:
-    bpc_commit<ppT> commit_t = bpc_commit<ppT>();
-    bpc_commit<ppT> commit_prime = bpc_commit<ppT>();
-    lego_cp_snark_proof<ppT> proof_lego = lego_cp_snark_proof<ppT>();
-    bpe_proof<ppT> proof_mue = bpe_proof<ppT>();
+    bpc_commit<ppT> commitT; // = bpc_commit<ppT>();
+    bpc_commit<ppT> commit_prime;// = bpc_commit<ppT>();
+    lego_cp_snark_proof<ppT> proof_lego;// = lego_cp_snark_proof<ppT>();
+    bpe_proof<ppT> proof_mue;// = bpe_proof<ppT>();
 
+
+    dario_proof() {};
     dario_proof(
-        bpc_commit<ppT> commit_t,
-        bpc_commit<ppT> commit_prime,
-        lego_cp_snark_proof<ppT> proof_lego,
-        bpe_proof<ppT> proof_mue) :
+        bpc_commit<ppT> &&commitT,
+        bpc_commit<ppT> &&commit_prime,
+        lego_cp_snark_proof<ppT> &&proof_lego,
+        bpe_proof<ppT> &&proof_mue) :
 
-            commit_t(std::move(commit_t)),
+            commitT(std::move(commitT)),
             commit_prime(std::move(commit_prime)),
             proof_lego(std::move(proof_lego)),
             proof_mue(std::move(proof_mue)) {};
+
+    size_t G1_size() const
+    {
+        return 2;
+    }
+
+    size_t G2_size() const
+    {
+        return 1;
+    }
+
+    size_t size_in_bits() const
+    {
+       return G1_size() * libff::G1<ppT>::size_in_bits() + G2_size() * libff::G2<ppT>::size_in_bits();
+    }
+
+    void print_size() const
+    {
+        libff::print_indent(); printf("* G1 elements in Commit: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in Commit: %zu\n", this->G2_size());
+        libff::print_indent(); printf("* Commit size in bits: %zu\n", this->size_in_bits());
+    }
+
+    bool is_well_formed() const
+    {
+        return (commitT.is_well_formed() &&
+                commit_prime.is_well_formed() &&
+                proof_lego.is_well_formed() &&
+                proof_mue.is_well_formed());
+    }
+
+    bool operator==(const dario_proof<ppT> &other) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const dario_proof<ppT> &proof);
+    friend std::istream& operator>> <ppT>(std::istream &in, dario_proof<ppT> &proof);
 };
 
 /******************************** Main Algorithms ********************************/
@@ -133,7 +295,7 @@ dario_crs<ppT> crs_generator(int &dimension,
  */
 
 template<typename ppT>
-dario_proof<ppT> prover(dario_crs<ppT> &crs,
+dario_proof<ppT> dario_prover(dario_crs<ppT> &crs,
                         dario_statement<ppT> &st,
                         dario_witness<ppT> &wit,
                         dario_primary_input<ppT> &primary_input);          
@@ -142,7 +304,7 @@ dario_proof<ppT> prover(dario_crs<ppT> &crs,
  * Verifier: Verifies dario_proof
  */
 template <typename ppT>
-bool verifier(dario_crs<ppT> &crs,
+bool dario_verifier(dario_crs<ppT> &crs,
               dario_statement<ppT> &st,
               dario_proof<ppT> &dario_proof);
 }

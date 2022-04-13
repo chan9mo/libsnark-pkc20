@@ -22,6 +22,92 @@ See bpc.hpp.
 
 namespace libsnark {
 
+//Key I/O
+
+template<typename ppT>
+bool bpc_key<ppT>::operator==(const bpc_key<ppT> &other) const
+{
+    return (this->dimension == other.dimension &&
+            this->length == other.length &&
+            this->g2 == other.g2 &&
+            this->h == other.h &&
+            this->g2_hat == other.g2_hat &&
+            this->h_hat == other.h_hat &&
+            this->g1_ij == other.g1_ij &&
+            this->g1_hat_ij == other.g1_hat_ij);
+}
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpc_key<ppT> &ck)
+{
+    out << ck.dimension << OUTPUT_NEWLINE;
+    out << ck.length << OUTPUT_NEWLINE;
+    out << ck.g2 << OUTPUT_NEWLINE;
+    out << ck.h << OUTPUT_NEWLINE;
+    out << ck.g2_hat << OUTPUT_NEWLINE;
+    out << ck.h_hat << OUTPUT_NEWLINE;
+    out << ck.g1_ij << OUTPUT_NEWLINE;
+    out << ck.g1_hat_ij << OUTPUT_NEWLINE;
+
+    return out;
+}
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpc_key<ppT> &ck)
+{
+    in >> ck.dimension;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.length;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.g2;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.h;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.g2_hat;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.h_hat;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.g1_ij;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.g1_hat_ij;
+    libff::consume_OUTPUT_NEWLINE(in);
+
+    return in;
+}
+
+//Commit I/O
+
+template<typename ppT>
+bool bpc_commit<ppT>::operator==(const bpc_commit<ppT> &other) const
+{
+    return (this->commit == other.commit &&
+            this->commit_hat == other.commit_hat &&
+            this->rho == other.rho);
+}
+
+template<typename ppT>
+std::ostream& operator<<(std::ostream &out, const bpc_commit<ppT> &ck)
+{
+    out << ck.commit << OUTPUT_NEWLINE;
+    out << ck.commit_hat << OUTPUT_NEWLINE;
+    out << ck.rho << OUTPUT_NEWLINE;
+
+    return out;
+}
+
+template<typename ppT>
+std::istream& operator>>(std::istream &in, bpc_commit<ppT> &ck)
+{
+    in >> ck.commit;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.commit_hat;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.rho;
+    libff::consume_OUTPUT_NEWLINE(in);
+
+    return in;
+}
+
 template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) {
     libff::enter_block("BPC_generator");
 
@@ -36,21 +122,27 @@ template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) 
 
     //calculated element: g1hat, g2hat, hhat, h_s, g2_s
     libff::G1<ppT> g1_hat = alpha * g1;
-    libff::G2<ppT> g2_hat = alpha * g1;
+    libff::G2<ppT> g2_hat = alpha * g2;
     libff::G1<ppT> h_hat = alpha * h;
     libff::G1<ppT> h_s = beta * h;
     libff::G2<ppT> g2_s = beta * g2;
 
     //vector element: g1_ij, g1_hat_ij
     
-    libff::G1_vector<ppT> g1_ij = libff::G1_vector<ppT>::one();
-    libff::G1_vector<ppT> g1_hat_ij = libff::G1_vector<ppT>::one();
+    libff::G1_2dvector<ppT> g1_ij;
+    libff::G1_vector<ppT> uni_g1_ij;
+    libff::G1_2dvector<ppT> g1_hat_ij;
+    libff::G1_vector<ppT> uni_g1_hat_ij;
 
     for (int i=0; i<dimension; i++) {
         for (int j=0; j<length; j++) {
-            g1_ij[i][j] = g1 * (beta * i) * (delta * j) ;
-            g1_hat_ij[i][j] = g1_hat * (beta * i) * (delta * j);
+            uni_g1_ij.emplace_back(g1 * (beta * i) * (delta * j)) ;
+            uni_g1_hat_ij.emplace_back(g1_hat * (beta * i) * (delta * j));
         }
+        g1_ij.emplace_back(uni_g1_ij);
+        g1_hat_ij.emplace_back(uni_g1_hat_ij);
+        uni_g1_ij.clear();
+        uni_g1_hat_ij.clear();
     }
 
     bpc_key<ppT> ck = bpc_key<ppT>(
@@ -65,22 +157,23 @@ template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) 
     return ck;
 }
 
-template <typename ppT> bpc_poly<ppT> mpc_to_bpc(bpc_unipoly<ppT> &poly){
+// template <typename ppT> bpc_poly<ppT> mpc_to_bpc(bpc_unipoly<ppT> &poly){
     
-    libff::G1_vector<libff::G1_vector<ppT>> multipoly = libff::G1_vector<libff::G1_vector<ppT>>::one();
+//     libff::G1_2dvector<ppT> multipoly;
+//     libff::G1_vector<ppT> uni_multipoly;
 
-    if (poly.count == 0) {
-        poly.count++;
-    }
-    else poly.count++;
+//     if (poly.count == 0) {
+//         poly.count++;
+//     }
+//     else poly.count++;
 
-    for(int i=0;i<sizeof(poly.coef);i++) {
-        multipoly[i][poly.count] = poly.coef[i];
-    }  
-    return multipoly;
-}
+//     for(int i=0;i<sizeof(poly.coef);i++) {
+//         multipoly[i][poly.count] = poly.coef[i];
+//     }  
+//     return multipoly;
+// }
 
-template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, bpc_poly<ppT> &poly){
+template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, libff::G1_2dvector<ppT> &poly){
     libff::enter_block("BPC_commit");
 
     //rho, c, c_hat 설정
@@ -109,11 +202,11 @@ template <typename ppT> bool bpc_commit_verifier(bpc_key<ppT> &ck, bpc_commit<pp
     libff::GT<ppT> g_is_hat = ppT::reduced_pairing(commit.c, ck.g_hat);
     libff::GT<ppT> c_is_hat = ppT::reduced_pairing(commit.c_hat, ck.g);
     
-    bool result = g_is_hat == c_is_hat;
+    bool result = (g_is_hat == c_is_hat);
     return result;
 }
 
-template <typename ppT> bool bpc_open_verifier(bpc_key<ppT> &ck, bpc_commit<ppT> &commit, bpc_poly<ppT> &poly) {
+template <typename ppT> bool bpc_open_verifier(bpc_key<ppT> &ck, bpc_commit<ppT> &commit, libff::G1_2dvector<ppT> &poly) {
 
 bool b1 = bpc_commit_verifier(&ck, &commit);
 
@@ -127,6 +220,7 @@ bool b2 = commit.c == (ck.h * commit.rho);
 bool result = b1 & b2;
 
 return result;
+}
 }
 
 #endif

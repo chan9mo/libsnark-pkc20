@@ -98,6 +98,15 @@ using G1_vector = std::vector<G1<EC_ppT> >;
 template<typename EC_ppT>
 using G2_vector = std::vector<G2<EC_ppT> >;
 
+//two-dimensional vector
+
+template<typename EC_ppT>
+using Fr_2dvector = std::vector<std::vector<Fr<EC_ppT> > >;
+template<typename EC_ppT>
+using G1_2dvector = std::vector<std::vector<G1<EC_ppT> > >;
+template<typename EC_ppT>
+using G2_2dvector = std::vector<std::vector<G2<EC_ppT> > >;
+
 } // libff
 
 #endif // PUBLIC_PARAMS_HPP_

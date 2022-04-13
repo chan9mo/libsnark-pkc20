@@ -26,9 +26,9 @@ void test_dario(size_t num_constraints,
 {
     libff::print_header("(enter) Test Dario");
 
-    const bool test_serialization = true;
-    const r1cs_example<libff::Fr<ppT>> example = generate_r1cs_example_with_binary_input<libff::Fr<ppT>>(num_constraints, input_size);
-    const bool bit = run_dario<ppT>(example, test_serialization);
+    bool test_serialization = true;
+    r1cs_example<libff::Fr<ppT>> example = generate_r1cs_example_with_binary_input<libff::Fr<ppT>>(num_constraints, input_size);
+    bool bit = run_dario<ppT>(example, test_serialization);
     assert(bit);
 
     libff::print_header("(leave) Test Dario");
