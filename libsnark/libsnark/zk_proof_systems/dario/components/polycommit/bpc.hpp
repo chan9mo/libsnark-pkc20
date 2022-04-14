@@ -55,22 +55,12 @@ template <typename ppT>
 class bpc_key
 {
     public:
-    //dimension, length
     int dimension;
     int length;
-    //libff::G1<ppT> g1;
     libff::G2<ppT> g2;
     libff::G1<ppT> h;
-    //libff::G1<ppT> g1_hat;
     libff::G2<ppT> g2_hat;
     libff::G1<ppT> h_hat;
-
-    /*libff::G1<ppT> alpha_g1;
-    libff::G1<ppT> beta_g1;
-    libff::G1<ppT> gamma_g1;
-    libff::G2<ppT> alpha_g2;
-    libff::G2<ppT> beta_g2;
-    libff::G2<ppT> gamma_g2;*/
 
     libff::G1_2dvector<ppT> g1_ij;
     libff::G1_2dvector<ppT> g1_hat_ij;
@@ -82,35 +72,19 @@ class bpc_key
     bpc_key(
         int dimension,
         int length,
-        //libff::G1<ppT> &&g1,
         libff::G2<ppT> &&g2,
         libff::G1<ppT> &&h,
-        //libff::G1<ppT> &&g1_hat,
         libff::G2<ppT> &&g2_hat,
         libff::G1<ppT> &&h_hat,
-        /*libff::G1<ppT> &&alpha_g1,
-        libff::G2<ppT> &&alpha_g2,
-        libff::G1<ppT> &&beta_g1,
-        libff::G2<ppT> &&beta_g2,
-        libff::G1<ppT> &&gamma_g1,
-        libff::G2<ppT> &&gamma_g2,*/
         libff::G1_2dvector<ppT> &&g1_ij,
         libff::G1_2dvector<ppT> &&g1_hat_ij) :
-            
-        //g1(std::move(g1)),
-        dimension(std::move(dimension)),
-        length(std::move(length)),
+        
+        dimension(dimension),
+        length(length),
         g2(std::move(g2)),
         h(std::move(h)),
-        //g1_hat(std::move(g1_hat)),
         g2_hat(std::move(g2_hat)),
         h_hat(std::move(h_hat)),
-        /*alpha_g1(std::move(alpha_g1)),
-        alpha_g2(std::move(alpha_g2)),
-        beta_g1(std::move(beta_g1)),
-        beta_g2(std::move(beta_g2)),
-        gamma_g1(std::move(gamma_g1)),
-        gamma_g2(std::move(gamma_g2)),*/
         g1_ij(std::move(g1_ij)),
         g1_hat_ij(std::move(g1_hat_ij)) {};        
 
@@ -167,10 +141,9 @@ class bpc_commit
         libff::G1<ppT> &&commit,
         libff::G1<ppT> &&commit_hat,
         libff::Fr<ppT> &&rho) : 
-
             commit(std::move(commit)),
-            commit_hat(std::move(commit_hat),
-            rho(std::move(rho))) {};
+            commit_hat(std::move(commit_hat)),
+            rho(std::move(rho)) {};
 
     size_t G1_size() const
     {
@@ -254,7 +227,7 @@ bpc_key<ppT> bpc_generator(int &dimension,
 
 template <typename ppT>
 bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, 
-                           libff::G1_vector<ppT> &polynomial);
+                           libff::G1_2dvector<ppT> &polynomial);
 
 /**
  * CommitVer: Verifies Commiement

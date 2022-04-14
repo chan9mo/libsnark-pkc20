@@ -20,9 +20,9 @@ See dario.hpp.
 #include <libsnark/knowledge_commitment/kc_multiexp.hpp>
 #include <libsnark/reductions/r1cs_to_qap/r1cs_to_qap.hpp>
 #include <libsnark/zk_proof_systems/dario/components/polycommit/bpc.hpp>
-#include <libsnark/zk_proof_systems/dario/components/polycommit/bpc.tcc>
+// #include <libsnark/zk_proof_systems/dario/components/polycommit/bpc.tcc>
 #include <libsnark/zk_proof_systems/dario/components/evalproof/bpe.hpp>
-#include <libsnark/zk_proof_systems/dario/components/evalproof/bpe.tcc>
+// #include <libsnark/zk_proof_systems/dario/components/evalproof/bpe.tcc>
 #include <libsnark/zk_proof_systems/dario/components/lego/lego_cp_snark.hpp>
 #include <libsnark/zk_proof_systems/dario/components/lego/lego_ss.hpp>
 
@@ -150,8 +150,8 @@ std::istream& operator>>(std::istream &in, dario_proof<ppT> &proof)
 /******************************** CRS Generator ********************************/
 
 template<typename ppT>
-dario_crs<ppT> crs_generator(int &dimension, 
-                             int &length, 
+dario_crs<ppT> crs_generator(const int &dimension, 
+                             const int &length, 
                              r1cs_gg_ppzksnark_constraint_system<ppT> &r1cs, 
                              r1cs_gg_ppzksnark_primary_input<ppT> &primary_input, 
                              relation<ppT> &R_link) {
@@ -185,8 +185,9 @@ dario_crs<ppT> crs_generator(int &dimension,
 
     for (int i=0; i<dimension; i++) {
         for (int j=0; j<length; j++) {
-            uni_g1_ij.emplace_back(g1 * (beta * i) * (delta * j)) ;
-            uni_g1_hat_ij.emplace_back(g1_hat * (beta * i) * (delta * j));
+            // uni_g1_ij.emplace_back(g1 * (beta * i) * (delta * j)) ;
+            uni_g1_ij.emplace_back(((delta * j)*(beta * i)) *g1 ) ;
+            uni_g1_hat_ij.emplace_back(((beta * i) * (delta * j)) *g1_hat);
         }
         g1_ij.emplace_back(uni_g1_ij);
         g1_hat_ij.emplace_back(uni_g1_hat_ij);
@@ -215,11 +216,11 @@ dario_crs<ppT> crs_generator(int &dimension,
          h_lego.emplace_back(libff::G1<ppT>::random_element());
     }
 
-    M.emplace_back(h[0]);
+    M.emplace_back(h_lego[0]);
     M.emplace_back(libff::G1<ppT>::zero());
     for (size_t i = 1; i < l + 1; i++)
     {
-        M.emplace_back(h[i]);
+        M.emplace_back(h_lego[i]);
     }
     M.emplace_back(libff::G1<ppT>::zero());
     M.emplace_back(ck_prime.first);
@@ -234,10 +235,9 @@ dario_crs<ppT> crs_generator(int &dimension,
     R_link = make_commitment<ppT>(h_lego, ck_prime, primary_input);
 
 //KeyGen
-
     bpc_key<ppT> crs_bpc = bpc_key<ppT>(
-                            std::move(dimension),
-                            std::move(length),
+                            dimension,
+                            length,
                             std::move(g2),
                             std::move(h),
                             std::move(g2_hat),
@@ -261,8 +261,10 @@ libff::Fr<ppT> poly_eval(libff::G1_2dvector<ppT> &poly,
                          libff::Fr<ppT> &point) {
     libff::Fr<ppT> eval = libff::Fr<ppT>::one();
 
-    for(int i=0;i<sizeof(poly.coef);i++) {
-        eval += poly.coef[i] * (point^i);
+    // TO DO 
+    for(int i=0;i<poly.size();i++) {
+        // eval = eval + poly[i] * (point^i);
+
     }
     return eval;
 }
@@ -290,85 +292,82 @@ libff::enter_block("Call to Dario Prover");
     }
 
 //T를 commit하여 C_t를 얻는다.
-    bpc_commit<ppT> commitT = bpc_commit<ppT>::bpc_commitment(crs.crs_bpc, wit.Tpoly);
+    bpc_commit<ppT> commitT = bpc_commitment(crs.crs_bpc, wit.Tpoly);
 
-//C_t, statement를 hash하여 eval.point인 random를 얻는다.
-    std::hash<ppT> random = std::hash<ppT>(st.commit, st.pubpoly, commitT);
+//C_t, statement를 hash하여 eval.point인 random를 얻는다., TO DO
+    // std::hash<ppT> random = std::hash<ppT>(st.commit, st.pubpoly, commitT);
+    libff::Fr<ppT> random = libff::Fr<ppT>::random_element(); // You should change this value from random to 'Hash' value
 
 //Polynomial Evaluation 함수를 통해서 p, r, t`, p_j evaluate
     libff::enter_block("Evaluate Polynomial: p, r, t_prime, p_j");
 
-    libff::Fr<ppT> p = poly_eval(st.pubpoly, random);
-    libff::Fr<ppT> r = poly_eval(Rpoly, random);
-    libff::Fr<ppT> t_prime = poly_eval(wit.Tpoly, random);
+    // TO DO , invalid evaluation
+    libff::Fr<ppT> p = poly_eval<ppT>(st.pubpoly, random);
+    libff::Fr<ppT> r = poly_eval<ppT>(Rpoly, random);
+    libff::Fr<ppT> t_prime = poly_eval<ppT>(wit.Tpoly, random);
     libff::Fr_vector<ppT> p_j;
-    for(int n=0;n<sizeof(wit.p_j);n++) {
-        p_j.emplace_back(poly_eval(wit.polys[n], random));
+    for(int n=0;n<wit.polys.size();n++) {
+        p_j.emplace_back(poly_eval<ppT>(wit.polys, random));
     }
-    p_j[sizeof(wit.p_j)+1] = t_prime;
+    p_j.__emplace_back(t_prime);
 
     libff::leave_block("Evaluate Polynomial p, r, t_prime, p_j");
 
-//evaluation 결과를 commit하여 C`, rho` 생성
+//evaluation 결과를 commit하여 C`, rho` 생성, TO DO
     libff::enter_block("Commit Evaluation");
-    bpc_commit<ppT> commit_prime = bpc_commit<ppT>(crs.crs_bpc, p_j);
+    // bpc_commit<ppT> commit_prime = bpc_commit<ppT>(crs.crs_bpc, p_j);
     libff::leave_block("Commit Evaluation");
 
 //MUE-dario_proof 구동
     libff::enter_block("Compute MUE_Proof");
 
-    libff::GT<ppT> pair_commit = ppT::reduced_pairing(commitT, st.commit);
-    bpe_statement<ppT> statement_commit = (std::move(pair_commit), 
-                                           std::move(commit_prime), 
-                                           std::move(random));
+//     libff::GT<ppT> pair_commit = ppT::reduced_pairing(commitT, st.commit);
+//     bpe_statement<ppT> statement_commit = (std::move(pair_commit), 
+//                                            std::move(commit_prime), 
+//                                            std::move(random));
     
-    libff::Fr<ppT> sumpoint = st.commit.rho + commitT.rho;
-    libff::G1_2dvector<ppT> evaluation;
-    for(int k=0;k<sizeof(wit.p_j)+1;k++) {
-        evaluation[k][0] = p_j[k];
-    }
+//     libff::Fr<ppT> sumpoint = st.commit.rho + commitT.rho;
+//     libff::G1_2dvector<ppT> evaluation;
+//     for(int k=0;k<sizeof(wit.p_j)+1;k++) {
+//         evaluation[k][0] = p_j[k];
+//     }
 
-    bpe_witness<ppT> witness_commit = (std::move(p_j), 
-                                       std::move(evaluation), 
-                                       std::move(sumpoint), 
-                                       std::move(commit_prime.rho));
+//     bpe_witness<ppT> witness_commit = (std::move(p_j), 
+//                                        std::move(evaluation), 
+//                                        std::move(sumpoint), 
+//                                        std::move(commit_prime.rho));
     
-    bpe_proof<ppT> proof_commit = bpe_prover<ppT>(std::move(crs.crs_bpc), 
-                                                  std::move(statement_commit),
-                                                  std::move(witness_commit));
+//     bpe_proof<ppT> proof_commit = bpe_prover<ppT>(std::move(crs.crs_bpc), 
+//                                                   std::move(statement_commit),
+//                                                   std::move(witness_commit));
 
-    libff::leave_block("Compute MUE_Proof");
+//     libff::leave_block("Compute MUE_Proof");
 
-//Lego 구동
+// //Lego 구동
 
-    libff::enter_block("Compute Lego_Proof");
+//     libff::enter_block("Compute Lego_Proof");
 
-    statement<ppT> lego_statement = statement<ppT>(std::move(commit_prime),
-                                                  std::move(p),
-                                                  std::move(r));
+//     statement<ppT> lego_statement = statement<ppT>(std::move(commit_prime),
+//                                                   std::move(p),
+//                                                   std::move(r));
 
-    witness<ppT> lego_witness = witness<ppT>(std::move(t_prime),
-                                             std::move(p_j),
-                                             std::move(commit_prime.rho));
+//     witness<ppT> lego_witness = witness<ppT>(std::move(t_prime),
+//                                              std::move(p_j),
+//                                              std::move(commit_prime.rho));
 
-    relation<ppT> lego_relation = relation<ppT> (std::move(lego_statement),
-                                                 std::move(lego_witness));
+//     relation<ppT> lego_relation = relation<ppT> (std::move(lego_statement),
+//                                                  std::move(lego_witness));
 
 
-    lego_cp_snark_proof<ppT> proof_prime = lego_cp_snark_prover<ppT>(std::move(crs.crs_lego.ek), 
-                                                                     std::move(lego_relation), 
-                                                                     std::move(primary_input));
+//     lego_cp_snark_proof<ppT> proof_prime = lego_cp_snark_prover<ppT>(std::move(crs.crs_lego.ek), 
+//                                                                      std::move(lego_relation), 
+//                                                                      std::move(primary_input));
 
-    libff::leave_block("Compute Lego_Proof");
-    libff::leave_block("Call to Dario Prover");
+//     libff::leave_block("Compute Lego_Proof");
+//     libff::leave_block("Call to Dario Prover");
 
 //dario_proof 반환
-    dario_proof<ppT> *d_proof = new dario_proof<ppT>(
-                              std::move(commitT), 
-                              std::move(commit_prime), 
-                              std::move(proof_commit), 
-                              std::move(proof_prime));
-    d_proof -> print_size();
+    dario_proof<ppT> d_proof = dario_proof<ppT>();
 
     return d_proof;
 }
@@ -381,8 +380,10 @@ bool dario_verifier(dario_crs<ppT> &crs,
 
     libff::enter_block("Call to Dario Verifier");
 
-//C_t, statement를 hash하여 eval.point인 random를 얻는다.
-    std::hash<ppT> random =std::hash<ppT>(st.commit, st.pubpoly, dario_proof.commitT);
+//C_t, statement를 hash하여 eval.point인 random를 얻는다. TO DO: You should change random from rnadom to 'Hash'
+    // std::hash<ppT> random =std::hash<ppT>(st.commit, st.pubpoly, dario_proof.commitT);
+    libff::Fr<ppT> random = libff::Fr<ppT>::random_element();
+
 
 //Polynomial Evaluation 함수를 통해서 p, r evaluate
     libff::enter_block("Polynomial Evaluation: p, r");
@@ -398,41 +399,42 @@ bool dario_verifier(dario_crs<ppT> &crs,
         uni_Rpoly.clear();
     }
     
-    libff::Fr<ppT> p = poly_eval(st.pubpoly, random);
-    libff::Fr<ppT> r = poly_eval(Rpoly, random);
+    libff::Fr<ppT> p = poly_eval<ppT>(st.pubpoly, random);
+    libff::Fr<ppT> r = poly_eval<ppT>(Rpoly, random);
 
     libff::leave_block("Polynomial Evaluation: p, r");
 
-//MUE에 대한 Verify
+//MUE에 대한 Verify TO DO 
     libff::enter_block("MUE-Verify");
-    libff::GT<ppT> pair_commit = ppT::reduced_pairing(dario_proof.commitT, st.commit);
-    bpe_statement<ppT> statement_commit = bpe_statement<ppT>(std::move(pair_commit), 
-                                                             std::move(dario_proof.commit_prime), 
-                                                             std::move(random));
-    bool b1 = bpe_verifier(std::move(crs.crs_bpc), 
-                           std::move(statement_commit), 
-                           std::move(dario_proof.proof_commit));
 
-    libff::leave_block("MUE-Verify");
+//     libff::GT<ppT> pair_commit = ppT::reduced_pairing(dario_proof.commitT, st.commit);
+//     bpe_statement<ppT> statement_commit = bpe_statement<ppT>(std::move(pair_commit), 
+//                                                              std::move(dario_proof.commit_prime), 
+//                                                              std::move(random));
+//     bool b1 = bpe_verifier(std::move(crs.crs_bpc), 
+//                            std::move(statement_commit), 
+//                            std::move(dario_proof.proof_commit));
 
-//Lego에 대한 Verify
-    libff::enter_block("Lego-Verify");
-    statement<ppT> lego_statement = statement<ppT>(std::move(dario_proof.commit_prime),
-                                                   std::move(p),
-                                                   std::move(r));
+//     libff::leave_block("MUE-Verify");
 
-    bool b2 = lego_cp_snark_verifier(std::move(crs.crs_lego),
-                                     std::move(lego_statement),
-                                     std::move(dario_proof.proof_prime));
+// //Lego에 대한 Verify
+//     libff::enter_block("Lego-Verify");
+//     statement<ppT> lego_statement = statement<ppT>(std::move(dario_proof.commit_prime),
+//                                                    std::move(p),
+//                                                    std::move(r));
 
-    libff::leave_block("Lego-Verify");
+//     bool b2 = lego_cp_snark_verifier(std::move(crs.crs_lego),
+//                                      std::move(lego_statement),
+//                                      std::move(dario_proof.proof_prime));
 
-//Verify 결과 반환
+//     libff::leave_block("Lego-Verify");
 
-    libff::leave_block("Call to Dario Verifier");
+// //Verify 결과 반환
 
-    bool result = b1 & b2;
-    return result;
+//     libff::leave_block("Call to Dario Verifier");
+
+//     bool result = b1 & b2;
+    return true;
 }
 
 #endif

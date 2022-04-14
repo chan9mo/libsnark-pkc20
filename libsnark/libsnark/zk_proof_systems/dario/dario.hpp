@@ -276,13 +276,7 @@ class dario_proof
     bool operator==(const dario_proof<ppT> &other) const;
     friend std::ostream& operator<< <ppT>(std::ostream &out, const dario_proof<ppT> &proof);
     friend std::istream& operator>> <ppT>(std::istream &in, dario_proof<ppT> &proof);
-    
-    ~dario_proof() {
-        delete commitT;
-        delete commit_prime;
-        delete proof_lego;
-        delete proof_mue;
-    }
+
 };
 
 /******************************** Main Algorithms ********************************/

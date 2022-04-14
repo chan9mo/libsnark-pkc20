@@ -193,7 +193,7 @@ class bpe_proof
 {
     public:
     bpc_commit<ppT> commit;
-    std::hash<ppT> hash;
+    libff::Fr<ppT> hash;
     libff::G1<ppT> sigma;
     libff::G1<ppT> tau;
 
@@ -203,7 +203,7 @@ class bpe_proof
     bpe_proof(bpe_proof<ppT> &&other) = default;
     bpe_proof(
         bpc_commit<ppT> &&commit,
-        std::hash<ppT> &&hash,
+        libff::Fr<ppT> &&hash,
         libff::G1<ppT> &&sigma,
         libff::G1<ppT> &&tau) :
 

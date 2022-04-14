@@ -177,23 +177,23 @@ template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, libff::
     libff::enter_block("BPC_commit");
 
     //rho, c, c_hat 설정
-    const libff::Fr<ppT> rho = libff::Fr<ppT>::random_element();
+    libff::Fr<ppT> rho = libff::Fr<ppT>::random_element();
     libff::G1<ppT> c = libff::G1<ppT>::one();
     libff::G1<ppT> c_hat = libff::G1<ppT>::one(); 
 
-    //∏g^a 계산
+    //∏g^a 계산 TO DO 
     for (int i=0; i<ck.dimension; i++) {
         for (int j=0; j<ck.length; j++) {
-            c += ck.g1_ij[i][j] * poly.coef[i][j];
-            c_hat += ck.g1_hat_ij[i][j] * poly.coef[i][j];
+            // c += poly[i][j] * ck.g1_ij[i][j];
+            // c_hat += ck.g1_hat_ij[i][j] * poly[i][j];
         }
     }
 
     //h^rho 곱하기
-    c += ck.h * rho;
-    c_hat += ck.h_hat * rho;
+    c = (rho * ck.h) + c;
+    c_hat = (rho *ck.h_hat) + c_hat;
 
-    bpc_commit<ppT> commit = bpc_commit<ppT>(std::move(c), std::move(c_hat), std::move(rho));
+    bpc_commit<ppT> commit = bpc_commit<ppT>(std::move(c), std::move(c_hat),  std::move(rho));
     return commit;
 
 }
