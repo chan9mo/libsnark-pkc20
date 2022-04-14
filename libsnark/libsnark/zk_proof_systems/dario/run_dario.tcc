@@ -129,6 +129,7 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     bool ans = dario_verifier<ppT>(d_crs, d_statement, d_proof);
     printf("\n"); libff::print_indent(); libff::print_mem("after Dario Verifier");
     printf("* The verification result is: %s\n", (ans ? "ACCEPT" : "REJECT"));
+    // bool ans = true;
 
     libff::leave_block("Call to run_dario");
 

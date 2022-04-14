@@ -248,8 +248,8 @@ dario_crs<ppT> crs_generator(int &dimension,
     lego_cp_snark_keypair<ppT> crs_lego = lego_cp_snark_keypair<ppT>(ss_pair.ek, 
                                                                      ss_pair.vk);
 
-    dario_crs<ppT> crs = dario_crs<ppT>(std::move(crs_bpc),
-                            std::move(crs_lego));
+    dario_crs<ppT> crs = dario_crs<ppT>(std::move(crs_bpc), std::move(crs_lego));
+    crs.print_size();
 
     return crs;       
 }
@@ -363,12 +363,14 @@ libff::enter_block("Call to Dario Prover");
     libff::leave_block("Call to Dario Prover");
 
 //dario_proof 반환
-    dario_proof<ppT> dario_proof = (std::move(commitT), 
+    dario_proof<ppT> *d_proof = new dario_proof<ppT>(
+                              std::move(commitT), 
                               std::move(commit_prime), 
                               std::move(proof_commit), 
                               std::move(proof_prime));
+    d_proof -> print_size();
 
-    return dario_proof;
+    return d_proof;
 }
 
 /******************************** Verifier ********************************/

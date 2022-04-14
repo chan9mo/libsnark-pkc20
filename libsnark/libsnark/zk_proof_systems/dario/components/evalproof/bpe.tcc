@@ -214,8 +214,10 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
 
     libff::leave_block("Call to BPE-Prover");
 
-    bpe_proof<ppT> proof = bpe_proof<ppT>(std::move(delta), std::move(hash_e), std::move(sigma), std::move(tau));
-    return proof;
+    bpe_proof<ppT> *proof = new bpe_proof<ppT>(std::move(delta), std::move(hash_e), std::move(sigma), std::move(tau));
+    // proof -> print_size();
+
+    return *proof;
 
 }
 
