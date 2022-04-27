@@ -79,41 +79,56 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
 
     libff::print_header("Dario Prover");
     
+    //Function: RQ-Π Proves the evaluation of this function by using poly_eval.
+    libff::Fr_2dvector<ppT> function;
+
     //Statement
-    libff::G1_2dvector<ppT> public_poly;
-    libff::G1_vector<ppT> uni_public_poly;
-    libff::G1_2dvector<ppT> commit_poly;
-    libff::G1_vector<ppT> uni_commit_poly;
+    libff::Fr_2dvector<ppT> Ppoly;
+    libff::Fr_vector<ppT> uni_Ppoly;
+    
+    libff::Fr_2dvector<ppT> temp_poly;
+    libff::Fr_vector<ppT> uni_temp_poly;
+
+    libff::Fr_2dvector<ppT> commit_poly;
+    libff::Fr_vector<ppT> uni_commit_poly;
 
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            uni_public_poly.emplace_back(libff::G1<ppT>::random_element());
-            uni_commit_poly.emplace_back(libff::G1<ppT>::random_element());
+            uni_temp_poly.emplace_back(libff::Fr<ppT>::random_element());
         }
-        public_poly.emplace_back(uni_public_poly);
-        commit_poly.emplace_back(uni_commit_poly);
-        uni_public_poly.clear();
-        uni_commit_poly.clear();
+        temp_poly.emplace_back(uni_temp_poly);
+        uni_temp_poly.clear();
     }
 
-    bpc_commit<ppT> commit = bpc_commitment<ppT>(d_crs.crs_bpc, commit_poly);
-    
-    dario_statement<ppT> d_statement = dario_statement<ppT>(std::move(commit), std::move(public_poly));
-    //Witness
-    libff::G1_2dvector<ppT> Tpoly;
-    libff::G1_vector<ppT> uni_Tpoly;
+// commit_poly f(p.j)
 
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-            uni_Tpoly.emplace_back(libff::G1<ppT>::random_element());
+            uni_commit_poly.emplace_back(libff::Fr<ppT>::random_element());
+        }
+        commit_poly.emplace_back(uni_commit_poly);
+        uni_commit_poly.clear();
+    }
+    bpc_commit<ppT> commit = bpc_commitment<ppT>(d_crs.crs_bpc, commit_poly);
+
+
+    
+    dario_statement<ppT> d_statement = dario_statement<ppT>(std::move(commit), std::move(Ppoly));
+
+    libff::Fr_2dvector<ppT> Tpoly;
+    libff::Fr_vector<ppT> uni_Tpoly;
+
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            uni_Tpoly.emplace_back(libff::Fr<ppT>::random_element());
         }
         Tpoly.emplace_back(uni_Tpoly);
         uni_Tpoly.clear();
     }
 
-    dario_witness<ppT> d_witness = dario_witness<ppT>(std::move(commit_poly), std::move(Tpoly));
+    dario_witness<ppT> d_witness = dario_witness<ppT>(std::move(temp_poly), std::move(Tpoly), std::move(commit.rho));
 
-    //Prover
+    // Prover
     dario_proof<ppT> d_proof = dario_prover<ppT>(d_crs, d_statement, d_witness, example.primary_input);
     printf("\n"); libff::print_indent(); libff::print_mem("after Dario Prover");
 
@@ -129,7 +144,6 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     bool ans = dario_verifier<ppT>(d_crs, d_statement, d_proof);
     printf("\n"); libff::print_indent(); libff::print_mem("after Dario Verifier");
     printf("* The verification result is: %s\n", (ans ? "ACCEPT" : "REJECT"));
-    // bool ans = true;
 
     libff::leave_block("Call to run_dario");
 

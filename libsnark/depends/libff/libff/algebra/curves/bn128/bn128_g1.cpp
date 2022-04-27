@@ -205,6 +205,8 @@ bn128_G1 bn128_G1::operator+(const bn128_G1 &other) const
     }
 }
 
+
+
 bn128_G1 bn128_G1::operator-() const
 {
     bn128_G1 result(*this);

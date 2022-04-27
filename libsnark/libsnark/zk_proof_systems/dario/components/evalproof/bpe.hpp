@@ -35,6 +35,7 @@ References:
 
 #include <libff/algebra/curves/public_params.hpp>
 #include <libsnark/common/data_structures/accumulation_vector.hpp>
+#include <libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget.hpp>
 #include <libsnark/knowledge_commitment/knowledge_commitment.hpp>
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark_params.hpp>
@@ -59,8 +60,8 @@ template <typename ppT>
 class bpe_statement
 {
     public:
-    libff::G1<ppT> commit;
-    libff::G1<ppT> commit_prime;
+    bpc_commit<ppT> commit;
+    bpc_commit<ppT> commit_prime;
     libff::Fr<ppT> point;
 
     bpe_statement() = default;
@@ -68,8 +69,8 @@ class bpe_statement
     bpe_statement(const bpe_statement<ppT> &other) = default;
     bpe_statement(bpe_statement<ppT> &&other) = default;
     bpe_statement(
-        libff::G1<ppT> &&commit,
-        libff::G1<ppT> &&commit_prime,
+        bpc_commit<ppT> &&commit,
+        bpc_commit<ppT> &&commit_prime,
         libff::Fr<ppT> &&point) :
 
             commit(std::move(commit)),
@@ -109,10 +110,10 @@ template <typename ppT>
 class bpe_poly
 {
     public:
-    libff::G1_2dvector<ppT> coef;
+    libff::Fr_2dvector<ppT> coef;
 
-    libff::G1_2dvector(
-        libff::G1_2dvector<ppT> &&coef) :
+    libff::Fr_2dvector(
+        libff::Fr_2dvector<ppT> &&coef) :
         coef(std::move(coef)) {};
 };
 vector를 원소로 가지는 vector */
@@ -122,32 +123,32 @@ template<typename ppT>
 class bpe_witness;
 
 template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const bpe_statement<ppT> &witness);
+std::ostream& operator<<(std::ostream &out, const bpe_witness<ppT> &witness);
 
 template<typename ppT>
-std::istream& operator>>(std::istream &in, bpe_statement<ppT> &witness);
+std::istream& operator>>(std::istream &in, bpe_witness<ppT> &witness);
 
 template <typename ppT>
 class bpe_witness
 {
     public:
-    libff::G1_2dvector<ppT> coef_p;
-    libff::G1_vector<ppT> coef_q;
-    libff::G1<ppT> rho;
-    libff::G1<ppT> rho_prime;
+    libff::Fr_2dvector<ppT> Ppoly;
+    libff::Fr_2dvector<ppT> Qpoly;
+    libff::Fr<ppT> rho;
+    libff::Fr<ppT> rho_prime;
 
     bpe_witness() = default;
     bpe_witness<ppT>& operator=(const bpe_witness<ppT> &other) = default;
     bpe_witness(const bpe_witness<ppT> &other) = default;
     bpe_witness(bpe_witness<ppT> &&other) = default;
     bpe_witness(
-        libff::G1_2dvector<ppT> &&coef_p,
-        libff::G1_vector<ppT> &&coef_q,
-        libff::G1<ppT> &&rho,
-        libff::G1<ppT> &&rho_prime) :
+        libff::Fr_2dvector<ppT> &&Ppoly,
+        libff::Fr_2dvector<ppT> &&Qpoly,
+        libff::Fr<ppT> &&rho,
+        libff::Fr<ppT> &&rho_prime) :
 
-        coef_p(std::move(coef_p)),
-        coef_q(std::move(coef_q)),
+        Ppoly(std::move(Ppoly)),
+        Qpoly(std::move(Qpoly)),
         rho(std::move(rho)),
         rho_prime(std::move(rho_prime)) {};
 
@@ -174,8 +175,8 @@ class bpe_witness
     }
 
     bool operator==(const bpe_witness<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const bpe_witness<ppT> &commit);
-    friend std::istream& operator>> <ppT>(std::istream &in, bpe_witness<ppT> &commit);
+    friend std::ostream& operator<< <ppT>(std::ostream &out, const bpe_witness<ppT> &witness);
+    friend std::istream& operator>> <ppT>(std::istream &in, bpe_witness<ppT> &witness);
 };
 
 /******************************** Proof ********************************/
@@ -193,9 +194,9 @@ class bpe_proof
 {
     public:
     bpc_commit<ppT> commit;
-    libff::Fr<ppT> hash;
-    libff::G1<ppT> sigma;
-    libff::G1<ppT> tau;
+    int hash;
+    libff::Fr<ppT> sigma;
+    libff::Fr<ppT> tau;
 
     bpe_proof() = default;
     bpe_proof<ppT>& operator=(const bpe_proof<ppT> &other) = default;
@@ -203,12 +204,12 @@ class bpe_proof
     bpe_proof(bpe_proof<ppT> &&other) = default;
     bpe_proof(
         bpc_commit<ppT> &&commit,
-        libff::Fr<ppT> &&hash,
-        libff::G1<ppT> &&sigma,
-        libff::G1<ppT> &&tau) :
+        int hash,
+        libff::Fr<ppT> &&sigma,
+        libff::Fr<ppT> &&tau) :
 
         commit(std::move(commit)),
-        hash(std::move(hash)),
+        hash(hash),
         sigma(std::move(sigma)),
         tau(std::move(tau)) {};
 
@@ -237,7 +238,6 @@ class bpe_proof
     bool is_well_formed() const
     {
         return (commit.is_well_formed() &&
-                hash.is_well_formed() &&
                 sigma.is_well_formed() &&
                 tau.is_well_formed());
     }

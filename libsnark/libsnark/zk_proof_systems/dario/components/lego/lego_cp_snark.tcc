@@ -170,7 +170,7 @@ namespace libsnark
             R_link.state.commitments[0] = R_link.state.commitments[0] + primary_input[i - 1] * h_vector[i];
             R_link.state.commitment_prime = R_link.state.commitment_prime + primary_input[i - 1] * f_vector.rest[i - 1];
         }
-        R_link.print();
+        // R_link.print();
 
         libff::leave_block("Call to make_commitment");
         

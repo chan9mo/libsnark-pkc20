@@ -86,6 +86,18 @@ bn128_G1 operator*(const Fp_model<m,modulus_p> &lhs, const bn128_G1 &rhs)
     return scalar_mul<bn128_G1, m>(rhs, lhs.as_bigint());
 }
 
+// template<mp_size_t m>
+// bn128_G1 operator^(const bn128_G1 &rhs, const bigint<m> &lhs)
+// {
+//     return power<bn128_G1, m>(rhs, lhs);
+// }
+
+// template<mp_size_t m, const bigint<m>& modulus_p>
+// bn128_G1 operator^(const bn128_G1 &rhs, const Fp_model<m,modulus_p> &lhs)
+// {
+//     return power<bn128_G1, m>(rhs, lhs.as_bigint());
+// }
+
 std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v);
 std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v);
 

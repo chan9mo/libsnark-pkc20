@@ -116,7 +116,7 @@ class dario_statement
 {
     public:
     bpc_commit<ppT> commit;
-    libff::G1_2dvector<ppT> pubpoly;
+    libff::Fr_2dvector<ppT> pubpoly;
 
     dario_statement() = default;
     dario_statement<ppT>& operator=(const dario_statement<ppT> &other) = default;
@@ -124,7 +124,7 @@ class dario_statement
     dario_statement(dario_statement<ppT> &&other) = default;
     dario_statement(
         bpc_commit<ppT> &&commit,
-        libff::G1_2dvector<ppT> &&pubpoly) :
+        libff::Fr_2dvector<ppT> &&pubpoly) :
 
             commit(std::move(commit)),
             pubpoly(std::move(pubpoly)) {};
@@ -170,19 +170,22 @@ template <typename ppT>
 class dario_witness
 {
     public:
-    libff::G1_2dvector<ppT> polys;
-    libff::G1_2dvector<ppT> Tpoly;
+    libff::Fr_2dvector<ppT> polys;
+    libff::Fr_2dvector<ppT> Tpoly;
+    libff::Fr<ppT> rho;
 
     dario_witness() = default;
     dario_witness<ppT>& operator=(const dario_witness<ppT> &other) = default;
     dario_witness(const dario_witness<ppT> &other) = default;
     dario_witness(dario_witness<ppT> &&other) = default;
     dario_witness(
-        libff::G1_2dvector<ppT> &&polys,
-        libff::G1_2dvector<ppT> &&Tpoly) :
+        libff::Fr_2dvector<ppT> &&polys,
+        libff::Fr_2dvector<ppT> &&Tpoly,
+        libff::Fr<ppT> &&rho) :
 
             polys(std::move(polys)),
-            Tpoly(std::move(Tpoly)) {};
+            Tpoly(std::move(Tpoly)),
+            rho(std::move(rho)) {};
     
     size_t G1_size() const
     {
@@ -287,14 +290,19 @@ class dario_proof
 template<typename ppT>
 dario_crs<ppT> crs_generator(int &dimension,
                        int &length,
-                       r1cs_gg_ppzksnark_constraint_system<ppT> &r1cs,
-                       r1cs_gg_ppzksnark_primary_input<ppT> &primary_input,
+                       dario_constraint_system<ppT> &r1cs,
+                       dario_primary_input<ppT> &primary_input,
                        relation<ppT> &R_link);  
+// /**
+//  * Polynomial Evaluation
+//  */
+// template<typename ppT>
+// libff::Fr<ppT> poly_eval(libff::Fr_2dvector<ppT> &poly, 
+//                          libff::Fr<ppT> &point);
 
 /**
  * Prover: Outputs dario_proof
  */
-
 template<typename ppT>
 dario_proof<ppT> dario_prover(dario_crs<ppT> &crs,
                         dario_statement<ppT> &st,

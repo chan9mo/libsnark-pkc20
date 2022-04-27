@@ -12,6 +12,10 @@ See bpc.hpp.
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <string>
+
+
+#include <openssl/sha.h>
 
 #include <libff/algebra/scalar_multiplication/multiexp.hpp>
 #include <libff/common/profiling.hpp>
@@ -30,7 +34,9 @@ bool bpc_key<ppT>::operator==(const bpc_key<ppT> &other) const
     return (this->dimension == other.dimension &&
             this->length == other.length &&
             this->g2 == other.g2 &&
+            this->g2_s == other.g2_s &&
             this->h == other.h &&
+            this->h_s == other.h_s &&
             this->g2_hat == other.g2_hat &&
             this->h_hat == other.h_hat &&
             this->g1_ij == other.g1_ij &&
@@ -43,7 +49,9 @@ std::ostream& operator<<(std::ostream &out, const bpc_key<ppT> &ck)
     out << ck.dimension << OUTPUT_NEWLINE;
     out << ck.length << OUTPUT_NEWLINE;
     out << ck.g2 << OUTPUT_NEWLINE;
+    out << ck.g2_s << OUTPUT_NEWLINE;
     out << ck.h << OUTPUT_NEWLINE;
+    out << ck.h_s << OUTPUT_NEWLINE;
     out << ck.g2_hat << OUTPUT_NEWLINE;
     out << ck.h_hat << OUTPUT_NEWLINE;
     out << ck.g1_ij << OUTPUT_NEWLINE;
@@ -61,7 +69,11 @@ std::istream& operator>>(std::istream &in, bpc_key<ppT> &ck)
     libff::consume_OUTPUT_NEWLINE(in);
     in >> ck.g2;
     libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.g2_s;
+    libff::consume_OUTPUT_NEWLINE(in);
     in >> ck.h;
+    libff::consume_OUTPUT_NEWLINE(in);
+    in >> ck.h_s;
     libff::consume_OUTPUT_NEWLINE(in);
     in >> ck.g2_hat;
     libff::consume_OUTPUT_NEWLINE(in);
@@ -146,10 +158,12 @@ template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) 
     }
 
     bpc_key<ppT> ck = bpc_key<ppT>(
-                            std::move(dimension),
-                            std::move(length),
+                            dimension,
+                            length,
                             std::move(g2),
+                            std::move(g2_s),
                             std::move(h),
+                            std::move(h_s),
                             std::move(g2_hat),
                             std::move(h_hat),
                             std::move(g1_ij),
@@ -159,7 +173,7 @@ template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) 
 
 // template <typename ppT> bpc_poly<ppT> mpc_to_bpc(bpc_unipoly<ppT> &poly){
     
-//     libff::G1_2dvector<ppT> multipoly;
+//     libff::Fr_2dvector<ppT> multipoly;
 //     libff::G1_vector<ppT> uni_multipoly;
 
 //     if (poly.count == 0) {
@@ -173,47 +187,123 @@ template<typename ppT> bpc_key<ppT> bpc_generator (int &dimension, int &length) 
 //     return multipoly;
 // }
 
-template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, libff::G1_2dvector<ppT> &poly){
+template<typename ppT> libff::Fr_2dvector<ppT> factorize(libff::Fr_2dvector<ppT> num, libff::Fr_2dvector<ppT> divisor) 
+{
+
+}
+
+using namespace std;
+template <typename ppT> int sha256(const string str)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, str.c_str(), str.size());
+    SHA256_Final(hash, &sha256);
+    stringstream ssInt;
+    int result;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        ssInt << hex << setw(2) << setfill('0') << (int)hash[i];
+    }
+    ssInt >> result;
+    return result;
+}
+
+template<typename ppT> string as_string(libff::G1<ppT> &g1) {
+    stringstream ss;
+    ss << g1.coord[0].toString(10) << g1.coord[1].toString(10) << g1.coord[2].toString(10);
+
+    return ss.str();
+}
+
+template<typename ppT> string as_string(libff::G2<ppT> &g2) {
+    stringstream ss;
+    ss << g2.coord[0].toString(10) << g2.coord[1].toString(10) << g2.coord[2].toString(10);
+
+    return ss.str();
+}
+
+
+template<typename ppT> string as_string(libff::G1_2dvector<ppT> &vec) {
+    stringstream ss;
+    for(int i=0;i<vec.size();i++) {
+        for(int j=0;j<vec.size();j++) {
+            ss << vec[i][j].coord[0].toString(10) << vec[i][j].coord[1].toString(10) << vec[i][j].coord[2].toString(10);
+        }
+    }
+
+    return ss.str();
+}
+
+template<typename ppT> string as_string(libff::Fr_2dvector<ppT> &vec) {
+    stringstream ss;
+    for(int i=0;i<vec.size();i++) {
+        for(int j=0;j<vec.size();j++) {
+            ss << to_string(vec[i][j].as_ulong());
+        }
+    }
+
+    return ss.str();
+}
+
+template<typename ppT> string as_string(libff::GT<ppT> &gt) {
+    stringstream ss;
+    // ss << gt.elem.c0.c0.c0.toString(10) << gt.c0.c0.c1.toString(10) << gt.c0.c1.c0.toString(10) << gt.c0.c1.c1.toString(10) << gt.c0.c2.c0.toString(10) << gt.c0.c2.c1.toString(10);
+    // ss << gt.c1.c0.c0.toString(10) << gt.c1.c0.c1.toString(10) << gt.c1.c1.c0.toString(10) << gt.c1.c1.c1.toString(10) << gt.c1.c2.c0.toString(10) << gt.c1.c2.c1.toString(10);
+    ss << gt;
+    return ss.str();
+}
+
+template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, libff::Fr_2dvector<ppT> &poly){
     libff::enter_block("BPC_commit");
 
     //rho, c, c_hat 설정
     libff::Fr<ppT> rho = libff::Fr<ppT>::random_element();
-    libff::G1<ppT> c = libff::G1<ppT>::one();
-    libff::G1<ppT> c_hat = libff::G1<ppT>::one(); 
+    libff::G1<ppT> c = rho * ck.h ;
+    libff::G1<ppT> c_hat = rho * ck.h_hat ;
 
     //∏g^a 계산 TO DO 
+    libff::G1<ppT> temp; 
     for (int i=0; i<ck.dimension; i++) {
         for (int j=0; j<ck.length; j++) {
-            // c += poly[i][j] * ck.g1_ij[i][j];
-            // c_hat += ck.g1_hat_ij[i][j] * poly[i][j];
+            temp = poly[i][j] * ck.g1_ij[i][j];
+            c = c + temp;
+            temp = poly[i][j] * ck.g1_hat_ij[i][j];
+            c_hat = c_hat + temp;
         }
     }
-
-    //h^rho 곱하기
-    c = (rho * ck.h) + c;
-    c_hat = (rho *ck.h_hat) + c_hat;
 
     bpc_commit<ppT> commit = bpc_commit<ppT>(std::move(c), std::move(c_hat),  std::move(rho));
     return commit;
 
 }
 
+template<typename ppT> string as_string(bpc_commit<ppT> &commit) {
+    stringstream ss;
+    ss << as_string<ppT>(commit.commit);
+    ss << as_string<ppT>(commit.commit_hat);
+    // ss << commit.rho.toString();
+
+    return ss.str();
+}
+
 template <typename ppT> bool bpc_commit_verifier(bpc_key<ppT> &ck, bpc_commit<ppT> &commit){
-    libff::GT<ppT> g_is_hat = ppT::reduced_pairing(commit.c, ck.g_hat);
-    libff::GT<ppT> c_is_hat = ppT::reduced_pairing(commit.c_hat, ck.g);
+    libff::GT<ppT> g_is_hat = ppT::reduced_pairing(commit.commit, ck.g2_hat);
+    libff::GT<ppT> c_is_hat = ppT::reduced_pairing(commit.commit_hat, ck.g2);
     
     bool result = (g_is_hat == c_is_hat);
     return result;
 }
 
-template <typename ppT> bool bpc_open_verifier(bpc_key<ppT> &ck, bpc_commit<ppT> &commit, libff::G1_2dvector<ppT> &poly) {
+template <typename ppT> bool bpc_open_verifier(bpc_key<ppT> &ck, bpc_commit<ppT> &commit, libff::Fr_2dvector<ppT> &poly) {
 
 bool b1 = bpc_commit_verifier(&ck, &commit);
 
 const libff::G1<ppT> c = libff::G1<ppT>::one();
 for (int i=0; i<ck.dimension; i++) {
         for (int j=0; j<ck.length; j++) {
-            c += ck.g1_ij[i][j] * poly.coef[i][j];
+            c += poly[i][j] * ck.g1_ij[i][j];
         }
     }
 bool b2 = commit.c == (ck.h * commit.rho);

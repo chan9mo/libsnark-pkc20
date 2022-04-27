@@ -546,7 +546,7 @@ target_link_libraries(
 
 add_executable(
   zk_proof_systems_dario_test
-  EXCLUDE_FROM_ALL
+  #EXCLUDE_FROM_ALL
 
   zk_proof_systems/dario/tests/test_dario.cpp
 )

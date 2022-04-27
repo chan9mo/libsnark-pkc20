@@ -25,6 +25,13 @@ bool bn128_GT::operator!=(const bn128_GT& other) const
     return !(operator==(other));
 }
 
+bn128_GT bn128_GT::operator+(const bn128_GT &other) const
+{
+    bn128_GT result;
+    bn::Fp12::add(result.elem, this->elem, other.elem);
+    return result;
+}
+
 bn128_GT bn128_GT::operator*(const bn128_GT &other) const
 {
     bn128_GT result;

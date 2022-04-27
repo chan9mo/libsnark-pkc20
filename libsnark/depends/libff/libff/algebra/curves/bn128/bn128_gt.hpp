@@ -29,6 +29,8 @@ public:
     bool operator==(const bn128_GT &other) const;
     bool operator!=(const bn128_GT &other) const;
 
+
+    bn128_GT operator+(const bn128_GT &other) const;
     bn128_GT operator*(const bn128_GT &other) const;
     bn128_GT unitary_inverse() const;
 

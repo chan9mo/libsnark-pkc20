@@ -58,7 +58,9 @@ class bpc_key
     int dimension;
     int length;
     libff::G2<ppT> g2;
+    libff::G2<ppT> g2_s;
     libff::G1<ppT> h;
+    libff::G1<ppT> h_s;
     libff::G2<ppT> g2_hat;
     libff::G1<ppT> h_hat;
 
@@ -73,7 +75,9 @@ class bpc_key
         int dimension,
         int length,
         libff::G2<ppT> &&g2,
+        libff::G2<ppT> &&g2_s,
         libff::G1<ppT> &&h,
+        libff::G1<ppT> &&h_s,
         libff::G2<ppT> &&g2_hat,
         libff::G1<ppT> &&h_hat,
         libff::G1_2dvector<ppT> &&g1_ij,
@@ -82,7 +86,9 @@ class bpc_key
         dimension(dimension),
         length(length),
         g2(std::move(g2)),
+        g2_s(std::move(g2_s)),
         h(std::move(h)),
+        h_s(std::move(h_s)),
         g2_hat(std::move(g2_hat)),
         h_hat(std::move(h_hat)),
         g1_ij(std::move(g1_ij)),
@@ -109,6 +115,7 @@ class bpc_key
         libff::print_indent(); printf("* G2 elements in CK: %zu\n", this->G2_size());
         libff::print_indent(); printf("* CommitKey size in bits: %zu\n", this->size_in_bits());
     }
+
 
     bool operator==(const bpc_key<ppT> &other) const;
     friend std::ostream& operator<< <ppT>(std::ostream &out, const bpc_key<ppT> &ck);
@@ -194,10 +201,10 @@ class bpc_commit
 // class bpc_poly
 // {
 //     public:
-//     libff::G1_2dvector<ppT> coef;
+//     libff::Fr_2dvector<ppT> coef;
 
 //     bpc_poly(
-//         libff::G1_2dvector<ppT> coef) :
+//         libff::Fr_2dvector<ppT> coef) :
 //         coef(std::move(coef))
 //         {};
 // };
@@ -227,7 +234,7 @@ bpc_key<ppT> bpc_generator(int &dimension,
 
 template <typename ppT>
 bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, 
-                           libff::G1_2dvector<ppT> &polynomial);
+                           libff::Fr_2dvector<ppT> &polynomial);
 
 /**
  * CommitVer: Verifies Commiement
@@ -243,7 +250,7 @@ bool bpc_commit_verifier(bpc_key<ppT> &ck,
 template <typename ppT>
 bool bpc_open_verifier(bpc_key<ppT> &ck, 
                        bpc_commit<ppT> &commit, 
-                       libff::G1_vector<ppT> &polynomial);
+                       libff::Fr_2dvector<ppT> &polynomial);
 
 }
 

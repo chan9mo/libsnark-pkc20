@@ -130,5 +130,5 @@ void test_knapsack_CRH_with_bit_out_gadget();
 } // libsnark
 
 #include <libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget.tcc>
-
+ 
 #endif // KNAPSACK_GADGET_HPP_

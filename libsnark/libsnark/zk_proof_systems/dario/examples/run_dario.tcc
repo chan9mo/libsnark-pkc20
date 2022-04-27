@@ -50,7 +50,7 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     int dimension = 3;
     int length = 100;
 
-    libff::G1_vector<ppT> random_commit;
+    libff::Fr_vector<ppT> random_commit;
     for (int i = 0; i < length; ++i)
     {
         random_commit.emplace_back(libff::G1<ppT>::random_element());
@@ -81,10 +81,10 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     libff::print_header("Dario Prover");
     
     //Statement
-    libff::G1_2dvector<ppT> public_poly;
-    libff::G1_vector<ppT> uni_public_poly;
-    libff::G1_2dvector<ppT> commit_poly;
-    libff::G1_vector<ppT> uni_commit_poly;
+    libff::Fr_2dvector<ppT> public_poly;
+    libff::Fr_vector<ppT> uni_public_poly;
+    libff::Fr_2dvector<ppT> commit_poly;
+    libff::Fr_vector<ppT> uni_commit_poly;
 
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
@@ -102,8 +102,8 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     dario_statement<ppT> d_statement = dario_statement<ppT>(std::move(commit), 
                                                        std::move(public_poly));
     //Witness
-    libff::G1_2dvector<ppT> Tpoly;
-    libff::G1_vector<ppT> uni_Tpoly;
+    libff::Fr_2dvector<ppT> Tpoly;
+    libff::Fr_vector<ppT> uni_Tpoly;
 
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
