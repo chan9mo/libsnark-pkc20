@@ -50,7 +50,7 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     int length = 100;
 
     libff::G1_vector<ppT> random_commit;
-    for (int i = 0; i < length; ++i)
+    for (int i = 0; i < length; i++)
     {
         random_commit.emplace_back(libff::G1<ppT>::random_element());
     }
@@ -58,7 +58,7 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     statement<ppT> random_statement = statement<ppT>(std::move(random_commit), std::move(random_commit_prime));
 
     libff::Fr_vector<ppT> random_openings;
-    for (int i = 0; i < length; ++i)
+    for (int i = 0; i < length; i++)
     {
         random_openings.emplace_back(libff::Fr<ppT>::random_element());
     }
@@ -69,13 +69,13 @@ bool run_dario(r1cs_example<libff::Fr<ppT>> &example,
     dario_crs<ppT> d_crs = crs_generator<ppT>(dimension, length, example.constraint_system, example.primary_input, random_relation);
     printf("\n"); libff::print_indent(); libff::print_mem("after generator");
 
-    if (test_serialization)
-    {
-        libff::enter_block("Test serialization of CRS");
-        d_crs.crs_bpc = libff::reserialize<bpc_key<ppT>>(d_crs.crs_bpc);
-        d_crs.crs_lego = libff::reserialize<lego_cp_snark_keypair<ppT>>(d_crs.crs_lego);
-        libff::leave_block("Test serialization of CRS");
-    }
+    // if (test_serialization)
+    // {
+    //     libff::enter_block("Test serialization of CRS");
+    //     d_crs.crs_bpc = libff::reserialize<bpc_key<ppT>>(d_crs.crs_bpc);
+    //     d_crs.crs_lego = libff::reserialize<lego_cp_snark_keypair<ppT>>(d_crs.crs_lego);
+    //     libff::leave_block("Test serialization of CRS");
+    // }
 
     libff::print_header("Dario Prover");
     

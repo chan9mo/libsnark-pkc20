@@ -188,10 +188,14 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
     libff::Fr_vector<ppT> uni_Wpoly;
 
     libff::Fr_2dvector<ppT> coeff;
+    libff::Fr_vector<ppT> uni_coeff;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
-                coeff[i][j] = w.Ppoly[i][j] - w.Qpoly[i][j];
+                // coeff[i][j] = w.Ppoly[i][j] - w.Qpoly[i][j];
+                uni_coeff.emplace_back(w.Ppoly[i][j] - w.Qpoly[i][j]);
         }
+        coeff.emplace_back(uni_coeff);
+        uni_coeff.clear();
     }
 
     libff::Fr_2dvector<ppT> divisor;
@@ -200,7 +204,16 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
     uni_divisor.emplace_back(libff::Fr<ppT>::one());
     divisor.emplace_back(uni_divisor);
 
-    Wpoly = factorize<ppT>(coeff, divisor);
+    // Wpoly = factorize<ppT>(coeff, divisor);  
+    // Problem: You need to make function 'factorize'
+
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            uni_Wpoly.emplace_back(libff::Fr<ppT>::random_element());
+        }
+        Wpoly.emplace_back(uni_Wpoly);
+        uni_Wpoly.clear();
+    }
 
     libff::G1<ppT> c = libff::G1<ppT>::one();
     libff::G1<ppT> c_hat = libff::G1<ppT>::one(); 
@@ -208,6 +221,7 @@ template <typename ppT> bpe_proof<ppT> bpe_prover(bpc_key<ppT> &ck, bpe_statemen
     //W 커밋, randomness: omega 추가
     bpc_commit<ppT> delta = bpc_commitment(ck, Wpoly);
     libff::Fr<ppT> random_omega = libff::Fr<ppT>::random_element();
+
 
     //g_tilde, x, y, beta(U) 계산
     libff::Fr<ppT> x = libff::Fr<ppT>::random_element();

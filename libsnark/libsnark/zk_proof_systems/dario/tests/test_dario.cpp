@@ -24,14 +24,14 @@ template<typename ppT>
 void test_dario(size_t num_constraints,
                 size_t input_size)
 {
-    libff::print_header("(enter) Test Dario");
+    libff::print_header("Test Dario");
 
     bool test_serialization = true;
     r1cs_example<libff::Fr<ppT>> example = generate_r1cs_example_with_binary_input<libff::Fr<ppT>>(num_constraints, input_size);
     bool bit = run_dario<ppT>(example, test_serialization);
     assert(bit);
 
-    libff::print_header("(leave) Test Dario");
+    libff::print_header("End Test Dario");
 }
 
 int main()

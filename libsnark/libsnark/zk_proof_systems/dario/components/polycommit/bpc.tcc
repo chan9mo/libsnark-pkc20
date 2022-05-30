@@ -275,6 +275,7 @@ template <typename ppT> bpc_commit<ppT> bpc_commitment(bpc_key<ppT> &ck, libff::
     }
 
     bpc_commit<ppT> commit = bpc_commit<ppT>(std::move(c), std::move(c_hat),  std::move(rho));
+    libff::leave_block("BPC_commit");
     return commit;
 
 }
