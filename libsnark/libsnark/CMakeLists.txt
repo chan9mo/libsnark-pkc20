@@ -227,6 +227,18 @@ add_executable(
 )
 
 add_executable(
+  profile_kzg
+  # EXCLUDE_FROM_ALL
+
+  zk_proof_systems/kzg/profiling/profile_kzg.cpp
+)
+ target_link_libraries(
+  profile_kzg
+
+  snark
+)
+
+add_executable(
   profile_r1cs_ppzksnark
   EXCLUDE_FROM_ALL
 
@@ -462,6 +474,8 @@ add_executable(
   relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.tcc
   zk_proof_systems/dario/examples/run_dario.hpp
   zk_proof_systems/dario/examples/run_dario.tcc
+  zk_proof_systems/kzg/examples/run_kzg.hpp
+  zk_proof_systems/kzg/examples/run_kzg.tcc
   zk_proof_systems/ppzksnark/r1cs_ppzksnark/examples/run_r1cs_ppzksnark.hpp
   zk_proof_systems/ppzksnark/r1cs_ppzksnark/examples/run_r1cs_ppzksnark.tcc
  
@@ -470,6 +484,8 @@ add_executable(
   #zk_proof_systems/ppzksnark/voting/examples/run_r1cs_ppzksnark.tcc
   #dario/run_dario.hpp
   #dario/run_dario.tcc
+  #zk_proof_systems/kzg/examples/run_kzg.hpp
+  #zk_proof_systems/kzg/examples/run_kzg.tcc
   
   gadgetlib2/examples/simple_example.cpp
   gadgetlib2/examples/simple_example.hpp
@@ -552,6 +568,18 @@ add_executable(
 )
 target_link_libraries(
   zk_proof_systems_dario_test
+
+  snark
+)
+
+add_executable(
+  zk_proof_systems_kzg_test
+  #EXCLUDE_FROM_ALL
+
+  zk_proof_systems/kzg/tests/test_kzg.cpp
+)
+target_link_libraries(
+  zk_proof_systems_kzg_test
 
   snark
 )
@@ -880,6 +908,7 @@ add_dependencies(check relations_qap_test)
 add_dependencies(check relations_sap_test)
 add_dependencies(check relations_ssp_test)
 add_dependencies(check zk_proof_systems_dario_test)
+add_dependencies(check zk_proof_systems_kzg_test)
 add_dependencies(check zk_proof_systems_bacs_ppzksnark_test)
 add_dependencies(check zk_proof_systems_r1cs_ppzksnark_test)
 add_dependencies(check zk_proof_systems_r1cs_se_ppzksnark_test)
