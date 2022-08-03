@@ -32,7 +32,7 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
 {
     libff::enter_block("Call to run_kzg");
 
-    int t = 28374;
+    int t = 3;
 
     /* Generate Polynomial to Commit: we need to put Convolution Poly. in this section */
 
@@ -59,7 +59,7 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
     /* Commit Polynomial into Product: G1-element */
 
     libff::print_header("Commit Polynomial");
-    commitment<ppT> commit = kzg_commit<ppT>(ck, poly, t);
+    libff::G1<ppT> commit = kzg_commit<ppT>(ck, poly, t);
     printf("\n"); libff::print_indent(); libff::print_mem("after commit");
 
     /* Generate witness of the evaluation + Evaluate the Polynomial */

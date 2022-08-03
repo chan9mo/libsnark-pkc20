@@ -99,59 +99,59 @@ class commitkey
 
 /******************************** Commitment ********************************/
 
-template<typename ppT>
-class commitment;
+// template<typename ppT>
+// class commitment;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const commitment<ppT> &ck);
+// template<typename ppT>
+// std::ostream& operator<<(std::ostream &out, const commitment<ppT> &ck);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, commitment<ppT> &ck);
+// template<typename ppT>
+// std::istream& operator>>(std::istream &in, commitment<ppT> &ck);
 
-template <typename ppT>
-class commitment
-{
-    public:
-    libff::G1<ppT> g1;
-    libff::G2<ppT> g2;
+// template <typename ppT>
+// class commitment
+// {
+//     public:
+//     libff::G1<ppT> g1;
+//     libff::G2<ppT> g2;
 
-    commitment() = default;
-    commitment<ppT>& operator=(const commitment<ppT> &other) = default;
-    commitment(const commitment<ppT> &other) = default;
-    commitment(commitment<ppT> &&other) = default;
-    commitment(
-        libff::G1<ppT> &&g1,
-        libff::G2<ppT> &&g2) :
-    g1(std::move(g1)),
-    g2(std::move(g2)) 
-    {};
+//     commitment() = default;
+//     commitment<ppT>& operator=(const commitment<ppT> &other) = default;
+//     commitment(const commitment<ppT> &other) = default;
+//     commitment(commitment<ppT> &&other) = default;
+//     commitment(
+//         libff::G1<ppT> &&g1,
+//         libff::G2<ppT> &&g2) :
+//     g1(std::move(g1)),
+//     g2(std::move(g2)) 
+//     {};
 
-    size_t G1_size() const
-    {
-        return g1.size();
-    }
+//     size_t G1_size() const
+//     {
+//         return g1.size();
+//     }
 
-    size_t GT_size() const
-    {
-        return 1;
-    }
+//     size_t GT_size() const
+//     {
+//         return 1;
+//     }
 
-    size_t size_in_bits() const
-    {
-       return (g1.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
-    }
+//     size_t size_in_bits() const
+//     {
+//        return (g1.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
+//     }
 
-    void print_size() const
-    {
-        libff::print_indent(); printf("* G1 elements in CK: %zu\n", this->G1_size());
-        libff::print_indent(); printf("* GT elements in CK: %zu\n", this->GT_size());
-        libff::print_indent(); printf("* Commit Key size in bits: %zu\n", this->size_in_bits());
-    }
+//     void print_size() const
+//     {
+//         libff::print_indent(); printf("* G1 elements in CK: %zu\n", this->G1_size());
+//         libff::print_indent(); printf("* GT elements in CK: %zu\n", this->GT_size());
+//         libff::print_indent(); printf("* Commit Key size in bits: %zu\n", this->size_in_bits());
+//     }
 
-    bool operator==(const commitment<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const commitment<ppT> &ck);
-    friend std::istream& operator>> <ppT>(std::istream &in, commitment<ppT> &ck);
-};
+//     bool operator==(const commitment<ppT> &other) const;
+//     friend std::ostream& operator<< <ppT>(std::ostream &out, const commitment<ppT> &ck);
+//     friend std::istream& operator>> <ppT>(std::istream &in, commitment<ppT> &ck);
+// };
 
 /******************************** Polynomial ********************************/
 
@@ -172,8 +172,8 @@ class witness
     libff::Fr<ppT> point;
     libff::Fr<ppT> eval;
     // libff::Fr_vector<ppT> psi; //need to be deleted
-    libff::G1<ppT> w;
-    libff::G2<ppT> w2; //need to be deleted.
+    libff::G1<ppT> w1;
+    // libff::G2<ppT> w2; //need to be deleted.
 
     witness() = default;
     witness<ppT>& operator=(const witness<ppT> &other) = default;
@@ -183,19 +183,19 @@ class witness
         libff::Fr<ppT> &&point,
         libff::Fr<ppT> &&eval,
         // libff::Fr_vector<ppT> &&psi,
-        libff::G1<ppT> &&w,
-        libff::G2<ppT> &&w2):
+        libff::G1<ppT> &&w1):
+        // libff::G2<ppT> &&w2):
 
     point(std::move(point)),
     eval(std::move(eval)),
     // psi(std::move(psi)),
-    w(std::move(w)),
-    w2(std::move(w2))
+    w1(std::move(w1))
+    // w2(std::move(w2))
     {};
 
     size_t G1_size() const
     {
-        return w.size();
+        return w1.size();
     }
 
     size_t GT_size() const
@@ -205,7 +205,7 @@ class witness
 
     size_t size_in_bits() const
     {
-       return (w.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
+       return (w1.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
     }
 
     void print_size() const
@@ -242,7 +242,7 @@ commitkey<ppT> kzg_setup(int t);
  */
 template<typename ppT>
 // libff::G1<ppT> kzg_commit(libff::G1_vector<ppT> &ck, libff::Fr_vector<ppT> &poly, int t);
-commitment<ppT> kzg_commit(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, int t);
+libff::G1<ppT> kzg_commit(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, int t);
 
 /**
  * A witness-generate algorithm for the KZG10.
@@ -264,7 +264,7 @@ libff::Fr<ppT> convert(int t);
  * "Polynomial is evaluated at particular evaluation point."
  */
 template<typename ppT>
-bool kzg_vfyeval(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witness);
+bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witness);
 
 
 /**

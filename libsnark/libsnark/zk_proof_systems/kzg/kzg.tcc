@@ -58,6 +58,8 @@ commitkey<ppT> kzg_setup(int t)
         // g1tuple[i].print();
     }
 
+    libff::leave_block("Generate t-SDH tuple: G1");
+
     /* Generate t-SDH tuple : G2 */
     libff::enter_block("Generate t-SDH tuple: G2");
 
@@ -76,6 +78,8 @@ commitkey<ppT> kzg_setup(int t)
         // g2tuple[i].print();
     }
 
+    libff::leave_block("Generate t-SDH tuple: G2");
+
     libff::leave_block("Generate t-SDH tuple");
 
     /* Output as a commitment key */
@@ -86,54 +90,53 @@ commitkey<ppT> kzg_setup(int t)
 
 }
 
-
 template<typename ppT>
-commitment<ppT> kzg_commit(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, int t)
+libff::G1<ppT> kzg_commit(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, int t)
 {
     libff::enter_block("Call to kzg_commit");
 
     libff::enter_block("Commit at G1");
 
     libff::G1<ppT> temp = libff::G1<ppT>::zero();
-    libff::G1<ppT> commit = libff::G1<ppT>::zero();
+    libff::G1<ppT> commit1 = libff::G1<ppT>::zero();
 
     for(size_t i = 1; i < t + 1; i++) {
-        if(poly[t-i] == 0) {
+        if(poly[t - i] == 0) {
             continue;
         }
         else {
             temp = poly[t - i] * ck.g1[i - 1];
-            commit = temp + commit;
+            commit1 = temp + commit1;
         }
     }
 
     libff::leave_block("Commit at G1");
 
-    libff::enter_block("Commit at G2");
+    // libff::enter_block("Commit at G2");
 
-    libff::G2<ppT> temp2 = libff::G2<ppT>::zero();
-    libff::G2<ppT> commit2 = libff::G2<ppT>::zero();
+    // libff::G2<ppT> temp2 = libff::G2<ppT>::zero();
+    // libff::G2<ppT> commit2 = libff::G2<ppT>::zero();
 
-    for(size_t i = 1; i < t + 1; i++) {
-        if(poly[t-i] == 0) {
-            continue;
-        }
-        else {
-            temp2 = poly[t - i] * ck.g2[i - 1];
-            commit2 = temp2 + commit2;
-        }
-    }
+    // for(size_t i = 1; i < t + 1; i++) {
+    //     if(poly[t-i] == 0) {
+    //         continue;
+    //     }
+    //     else {
+    //         temp2 = poly[t - i] * ck.g2[i - 1];
+    //         commit2 = temp2 + commit2;
+    //     }
+    // }
 
-    libff::leave_block("Commit at G2");
-    
+    // libff::leave_block("Commit at G2");
+
     // libff::print_header("Commitment C");
     // commit.print();
     // printf("\n");
 
     libff::leave_block("Call to kzg_commit");
-    commitment<ppT> result = commitment<ppT>(std::move(commit), std::move(commit2));
+    // commitment<ppT> result = commitment<ppT>(std::move(commit1), std::move(commit2));
 
-    return result;
+    return commit1;
 }
 
 template<typename ppT>
@@ -199,11 +202,11 @@ witness<ppT> kzg_witness(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, libff:
         // psi[i].print();
     }
 
-    if(poly[t - 1] == 0) {
-        libff::print_header("Division Success!");
-    } else {
-        printf("division Fail. Abort.");
-    }
+    // if(poly[t - 1] == 0) {
+    //     libff::print_header("Division Success!");
+    // } else {
+    //     printf("division Fail. Abort.");
+    // }
 
     libff::leave_block("Divide Algorithm: poly(x) - poly(i) / (x - i)");
 
@@ -214,53 +217,51 @@ witness<ppT> kzg_witness(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, libff:
     libff::G1<ppT> temp1 = libff::G1<ppT>::zero();
     libff::G1<ppT> w1 = libff::G1<ppT>::zero();
 
-    for(size_t i = 2; i < t + 1; i++) {
-        if(psi[t-i] == 0) {
+    for(int i = 2; i < t + 1; i++) {
+        if(psi[t - i] == 0) {
+            printf("**********TRUE********\n");
             continue;
         }
         else {
             temp1 = psi[t - i] * ck.g1[i - 2];
             w1 = temp1 + w1;
+            printf("**********FALSE********\n");
         }
     }
 
-    // libff::print_header("witness w = g^psi: G1");
+    libff::print_header("witness w = g^psi: G1");
 
-    // w1.print();
-    // printf("\n");
+    w1.print();
 
     libff::leave_block("Compute w = g ^ psi(a): G1");
 
-    libff::enter_block("Compute w = g ^ psi(a):G2");
+    // libff::enter_block("Compute w = g ^ psi(a):G2");
 
-    libff::G2<ppT> temp2 = libff::G2<ppT>::zero();
-    libff::G2<ppT> w2 = libff::G2<ppT>::zero();
+    // libff::G2<ppT> temp2 = libff::G2<ppT>::zero();
+    // libff::G2<ppT> w2 = libff::G2<ppT>::zero();
 
-    for(size_t i = 2; i < t + 1; i++) {
-        if(psi[t-i] == 0) {
-            continue;
-        }
-        else {
-            temp2 = psi[t - i] * ck.g2[i - 2];
-            w2 = temp2 + w2;
-        }
-    }
-
-    // libff::print_header("witness w = g^psi: G2");
-
-    // w2.print();
-    // printf("\n");
-
-    libff::leave_block("Compute w = g ^ psi(a):G2");
-
-    // for(i = 0;i < t-1; i++) {
-    // psi[i].print();
+    // for(size_t i = 2; i < t + 1; i++) {
+    //     if(psi[t-i] == 0) {
+    //         continue;
+    //     }
+    //     else {
+    //         temp2 = psi[t - i] * ck.g2[i - 2];
+    //         w2 = temp2 + w2;
+    //     }
     // }
+
+    // // libff::print_header("witness w = g^psi: G2");
+
+    // // w2.print();
+    // // printf("\n");
+
+    // libff::leave_block("Compute w = g ^ psi(a):G2");
 
     libff::leave_block("Call to kzg_witness");
 
     /* Output as a witness */
-    witness<ppT> wit = witness<ppT>(std::move(point), std::move(eval), std::move(w1), std::move(w2));
+    // witness<ppT> wit = witness<ppT>(std::move(point), std::move(eval), std::move(w1), std::move(w2));
+    witness<ppT> wit = witness<ppT>(std::move(point), std::move(eval), std::move(w1));
     return wit;
 }
 
@@ -286,7 +287,7 @@ libff::Fr<ppT> convert(int t)
 }
 
 template<typename ppT>
-bool kzg_vfyeval(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witness)
+bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witness)
 {
     //symmetric Group, G, GT만 존재. (구현상으로는 G1으로 했기 때문에 G1, GT만 존재하는것으로..?)
     // g2 자리에 들어가는 건 g2원소로 만들어야 한다. G2용 generator를 만들어서 한번 계산해보도록.
@@ -295,7 +296,7 @@ bool kzg_vfyeval(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witn
 
     /* LEFT SIDE: e(C, g) */
     libff::enter_block("Compute LEFT : e(C, g)");
-    libff::GT<ppT> left1 = ppT::reduced_pairing(commit.g1, ck.g2[0]); //either side does not matter.
+    libff::GT<ppT> left1 = ppT::reduced_pairing(commit, ck.g2[0]); //either side does not matter.
     // libff::GT<ppT> left2 = ppT::reduced_pairing(ck.g1[0], commit.g2);
 
     // libff::print_header("LEFT: e(Commit, generator)");
@@ -321,7 +322,7 @@ bool kzg_vfyeval(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witn
     libff::leave_block("Compute g ^ (-i)");
     //e(w, g ^ (- i) * g ^ a = g ^ (a - i))
     // libff::GT<ppT> right1 = ppT::reduced_pairing(num1 + ck.g1[1], witness.w2);
-    libff::GT<ppT> right1 = ppT::reduced_pairing(witness.w, num2 + ck.g2[1]);
+    libff::GT<ppT> right1 = ppT::reduced_pairing(witness.w1, num2 + ck.g2[1]);
 
     // libff::print_header("e(w, g ^ (a-i))");
     libff::leave_block("Compute e(w, g ^ (a-i))");
