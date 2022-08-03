@@ -55,7 +55,7 @@ class commitkey
     public:
     libff::G1_vector<ppT> g1;
     libff::G2_vector<ppT> g2;
-    libff::Fr<ppT> a;
+    // libff::Fr<ppT> a;
 
     commitkey() = default;
     commitkey<ppT>& operator=(const commitkey<ppT> &other) = default;
@@ -63,11 +63,11 @@ class commitkey
     commitkey(commitkey<ppT> &&other) = default;
     commitkey(
         libff::G1_vector<ppT> &&g1,
-        libff::G2_vector<ppT> &&g2,
-        libff::Fr<ppT> &&a) :
+        libff::G2_vector<ppT> &&g2) :
+        // libff::Fr<ppT> &&a) :
     g1(std::move(g1)),
-    g2(std::move(g2)),
-    a(std::move(a)) 
+    g2(std::move(g2))
+    // a(std::move(a)) 
     {};
 
     size_t G1_size() const
@@ -171,7 +171,7 @@ class witness
     public:
     libff::Fr<ppT> point;
     libff::Fr<ppT> eval;
-    libff::Fr_vector<ppT> psi; //need to be deleted
+    // libff::Fr_vector<ppT> psi; //need to be deleted
     libff::G1<ppT> w;
     libff::G2<ppT> w2; //need to be deleted.
 
@@ -182,13 +182,13 @@ class witness
     witness(
         libff::Fr<ppT> &&point,
         libff::Fr<ppT> &&eval,
-        libff::Fr_vector<ppT> &&psi,
+        // libff::Fr_vector<ppT> &&psi,
         libff::G1<ppT> &&w,
         libff::G2<ppT> &&w2):
 
     point(std::move(point)),
     eval(std::move(eval)),
-    psi(std::move(psi)),
+    // psi(std::move(psi)),
     w(std::move(w)),
     w2(std::move(w2))
     {};
@@ -269,16 +269,16 @@ bool kzg_vfyeval(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witn
 
 /**
  This is the consistency check between the intermediate clauses of verify-pairing equation.
-   To run this check, change of Data Structure is required. The change is as follows.
+   To run this check, change of Data Structure is required as follows.
 
  - commitment key: secret randomness A needed
  - commit: G1-version, G2-version both needed
- - witness: psi[i], witness(G2-version needed)
- - polynomial
+ - witness: psi[i] needed
+ - polynomial (because polynomial is deleted after Create-witness phase, paste it!)
  
  */
-template<typename ppT>
-bool kzg_testvfy(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witness, libff::Fr_vector<ppT> &poly, int t);
+// template<typename ppT>
+// bool kzg_testvfy(commitkey<ppT> &ck, commitment<ppT> &commit, witness<ppT> &witness, libff::Fr_vector<ppT> &poly, int t);
 
 } //libsnark
 

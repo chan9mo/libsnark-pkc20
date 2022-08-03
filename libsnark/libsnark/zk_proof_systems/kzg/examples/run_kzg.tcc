@@ -32,48 +32,23 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
 {
     libff::enter_block("Call to run_kzg");
 
-    int i;
-    int t = 10000;
+    int t = 28374;
 
     /* Generate Polynomial to Commit: we need to put Convolution Poly. in this section */
 
-    libff::print_header("Make Polynomial");
-
     libff::Fr_vector<ppT> poly(t);
 
-    for(i = 0; i < t; i++) {
+    for(int i = 0; i < t; i++) {
         libff::Fr<ppT> random = libff::Fr<ppT>::random_element();
         poly[i] = random;
         // poly[i].print();
     }
-    // poly[0] = convert<ppT>(1);
-    // poly[2] = convert<ppT>(-1);
-    // for(i = 0; i < t; i++) {
-    //     poly[i].print();
-    // }
-
-//    poly[0] = convert<>
-//     poly.emplace_back(convert<ppT>(1));
-//     poly.emplace_back(convert<ppT>(0));
-//     poly.emplace_back(convert<ppT>(21888242871839275222246405745257275088548364400416034343698204186575808495616));
-//     poly.emplace_back(convert<ppT>(21888242871839275222246405745257275088548364400416034343698204186575808495616));
-
-    // poly[3].print();
-    // poly[0] = convert<ppT>(1);
-
-
-    libff::Fr_vector<ppT> poly2(t);
-
-    for(i = 0; i < t; i++) {
-        poly2[i] = poly[i];
-    }
 
     /* Generate Random Point for Evaluation */
 
-    libff::print_header("Generate Random point");
     libff::Fr<ppT> point = libff::Fr<ppT>::random_element();
     // libff::Fr<ppT> point = convert<ppT>(1);
-    point.print();
+    // point.print();
 
     /* Generate t-SDH tuple, and select secret randomness t */
 
@@ -95,16 +70,16 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
 
     /* Verify evaluation */
     libff::print_header("Verify Evaluation of Polynomial");
-    bool verifyevaluation = kzg_vfyeval<ppT>(ck, commit, wit);
+    bool verifyresult = kzg_vfyeval<ppT>(ck, commit, wit);
     printf("\n"); libff::print_indent(); libff::print_mem("after vfyeval");
 
     /* Verify evaluation TEST-DEMO*/
-    libff::print_header("Verify TEST-Logical Error");
-    bool testresult = kzg_testvfy<ppT>(ck, commit, wit, poly2, t);
-    printf("\n"); libff::print_indent(); libff::print_mem("after testvfy");
+    // libff::print_header("Verify TEST-Logical Error");
+    // bool testresult = kzg_testvfy<ppT>(ck, commit, wit, poly2, t);
+    // printf("\n"); libff::print_indent(); libff::print_mem("after testvfy");
 
     libff::leave_block("Call to run_kzg");
-    return verifyevaluation;
+    return verifyresult;
 
     //clear all
     poly.clear();
