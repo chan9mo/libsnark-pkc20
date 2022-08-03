@@ -50,7 +50,7 @@ commitkey<ppT> kzg_setup(int t)
     g1tuple[0] = generator; // t-SDH = (g1, ...)
     // g1tuple[0].print();
 
-    for(size_t i = 0; i < t; i++)
+    for(size_t i = 1; i < t + 1; i++)
     {
         exp_a = exp_a * a;
         g1tuple[i] = exp_a * generator;
@@ -66,11 +66,10 @@ commitkey<ppT> kzg_setup(int t)
     libff::Fr<ppT> exp_a2 = libff::Fr<ppT>::one();
 
     libff::G2_vector<ppT> g2tuple(t+1);
-    // g2tuple.emplace_back(generator2); // t-SDH = (g2, ...)
     g2tuple[0] = generator2;
     // g2tuple[0].print();
 
-    for(size_t i = 0; i < t; i++)
+    for(size_t i = 1; i < t + 1; i++)
     {
         exp_a2 = exp_a2 * a;
         g2tuple[i] = exp_a2 * generator2;
@@ -130,7 +129,7 @@ libff::G1<ppT> kzg_commit(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, int t
     // libff::leave_block("Commit at G2");
 
     // libff::print_header("Commitment C");
-    // commit.print();
+    // commit1.print();
     // printf("\n");
 
     libff::leave_block("Call to kzg_commit");
@@ -219,19 +218,17 @@ witness<ppT> kzg_witness(commitkey<ppT> &ck, libff::Fr_vector<ppT> &poly, libff:
 
     for(int i = 2; i < t + 1; i++) {
         if(psi[t - i] == 0) {
-            printf("**********TRUE********\n");
             continue;
         }
         else {
             temp1 = psi[t - i] * ck.g1[i - 2];
             w1 = temp1 + w1;
-            printf("**********FALSE********\n");
         }
     }
 
-    libff::print_header("witness w = g^psi: G1");
+    // libff::print_header("witness w = g^psi: G1");
 
-    w1.print();
+    // w1.print();
 
     libff::leave_block("Compute w = g ^ psi(a): G1");
 
@@ -296,8 +293,9 @@ bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witne
 
     /* LEFT SIDE: e(C, g) */
     libff::enter_block("Compute LEFT : e(C, g)");
+
     libff::GT<ppT> left1 = ppT::reduced_pairing(commit, ck.g2[0]); //either side does not matter.
-    // libff::GT<ppT> left2 = ppT::reduced_pairing(ck.g1[0], commit.g2);
+    // libff::GT<ppT> left1_g2 = ppT::reduced_pairing(ck.g1[0], commit.g2);
 
     // libff::print_header("LEFT: e(Commit, generator)");
     // left1.print();
@@ -308,11 +306,11 @@ bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witne
     /* RIGHT SIDE: e(w, g ^ (a-i)) * e(g ^ eval, g) */
     libff::enter_block("Compute RIGHT : e(w, g ^ (a-i)) * e(g ^ eval, g)");
 
-    //right1, 3: e(w, g ^ (a-i))
+    /*right1, 3: e(w, g ^ (a-i))*/
     libff::enter_block("Compute e(w, g ^ (a-i))");
     libff::Fr<ppT> zero = libff::Fr<ppT>::zero();
 
-    //g ^ (-i)
+    /*g ^ (-i)*/
     libff::enter_block("Compute g ^ (-i)");
 
     libff::Fr<ppT> num = zero - witness.point;
@@ -320,26 +318,29 @@ bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witne
     libff::G2<ppT> num2 = num * ck.g2[0];
 
     libff::leave_block("Compute g ^ (-i)");
-    //e(w, g ^ (- i) * g ^ a = g ^ (a - i))
-    // libff::GT<ppT> right1 = ppT::reduced_pairing(num1 + ck.g1[1], witness.w2);
+
+    /* e(w, g ^ (- i) * g ^ a = g ^ (a - i)) */
+
+    // libff::GT<ppT> right1_g2 = ppT::reduced_pairing(num1 + ck.g1[1], witness.w2);
     libff::GT<ppT> right1 = ppT::reduced_pairing(witness.w1, num2 + ck.g2[1]);
 
     // libff::print_header("e(w, g ^ (a-i))");
     libff::leave_block("Compute e(w, g ^ (a-i))");
 
-    // right2: e(g ^ eval, g)
+    /* right2: e(g ^ eval, g) */
     libff::enter_block("Compute e(g ^ eval, g");
 
     libff::GT<ppT> right2 = ppT::reduced_pairing(witness.eval * ck.g1[0], ck.g2[0]); //eval which side? doesnt matter.
-    // libff::GT<ppT> right4 = ppT::reduced_pairing(ck.g1[0], witness.eval * ck.g2[0]);
+    // libff::GT<ppT> right2_g2 = ppT::reduced_pairing(ck.g1[0], witness.eval * ck.g2[0]);
 
     // libff::print_header(" e(g ^ eval, g)");
     libff::leave_block("Compute e(g ^ eval, g");
 
-    //RIGHT: e(w, g ^ (a-i)) * e(g ^ eval, g), 
+    /* RIGHT: e(w, g ^ (a-i)) * e(g ^ eval, g), */
 
     libff::GT<ppT> right = right1 * right2;
     libff::leave_block("Compute RIGHT : e(w, g ^ (a-i)) * e(g ^ eval, g)");
+
     // libff::print_header("RIGHT: e(w, g^a/g^i) * e(g^eval, g)");
     // right.print();
 
@@ -348,16 +349,17 @@ bool kzg_vfyeval(commitkey<ppT> &ck, libff::G1<ppT> &commit, witness<ppT> &witne
 
     if (left1 == right) {
         verifyresult = true;
-        libff::print_header("VERIFICATION ACCEPT!!");
+        // libff::print_header("VERIFICATION ACCEPT!!");
     } else {
         verifyresult = false;
-        libff::print_header("VERIFICATION REJECT");
+        // libff::print_header("VERIFICATION REJECT");
     }
 
     libff::leave_block("Verification: LEFT =? RIGHT");
 
     libff::leave_block("Call to kzg_vfyeval");
 
+    // return verifyresult;
     return verifyresult;
 }
 

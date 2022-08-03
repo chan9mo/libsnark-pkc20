@@ -75,6 +75,11 @@ class commitkey
         return g1.size();
     }
 
+    size_t G2_size() const
+    {
+        return g2.size();
+    }
+
     size_t GT_size() const
     {
         return 1;
@@ -82,13 +87,13 @@ class commitkey
 
     size_t size_in_bits() const
     {
-       return (g1.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
+       return (g1.size_in_bits() + g2.size_in_bits());
     }
 
     void print_size() const
     {
-        libff::print_indent(); printf("* G1 elements in CK: %zu\n", this->G1_size());
-        libff::print_indent(); printf("* GT elements in CK: %zu\n", this->GT_size());
+        libff::print_indent(); printf("* G1 elements in CommitKey: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* G2 elements in CommitKey: %zu\n", this->G2_size());
         libff::print_indent(); printf("* Commit Key size in bits: %zu\n", this->size_in_bits());
     }
 
@@ -198,21 +203,15 @@ class witness
         return w1.size();
     }
 
-    size_t GT_size() const
-    {
-        return 1;
-    }
-
     size_t size_in_bits() const
     {
-       return (w1.size_in_bits() + GT_size() * libff::GT<ppT>::size_in_bits());
+       return (2 + w1.size_in_bits());
     }
 
     void print_size() const
     {
-        libff::print_indent(); printf("* G1 elements in CK: %zu\n", this->G1_size());
-        libff::print_indent(); printf("* GT elements in CK: %zu\n", this->GT_size());
-        libff::print_indent(); printf("* Commit Key size in bits: %zu\n", this->size_in_bits());
+        libff::print_indent(); printf("* G1 elements in Witness: %zu\n", this->G1_size());
+        libff::print_indent(); printf("* Witness size in bits: %zu\n", this->size_in_bits());
     }
 
     bool operator==(const witness<ppT> &other) const;

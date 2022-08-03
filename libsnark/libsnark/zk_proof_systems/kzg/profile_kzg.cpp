@@ -28,7 +28,7 @@
 #include <libff/common/profiling.hpp>
 #include <libff/common/utils.hpp>
 
-#include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
+#include <libsnark/common/default_types/kzg_pp.hpp>
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
 #include <libsnark/zk_proof_systems/kzg/examples/run_kzg.hpp>
 
@@ -62,7 +62,7 @@ int main(int argc, const char * argv[])
     }
 
     libff::enter_block("Generate R1CS example");
-    r1cs_example<libff::Fr<default_r1cs_gg_ppzksnark_pp> > example = generate_r1cs_example_with_field_input<libff::Fr<default_kzg_pp> >(num_constraints, input_size);
+    r1cs_example<libff::Fr<default_kzg_pp> > example = generate_r1cs_example_with_field_input<libff::Fr<default_kzg_pp> >(num_constraints, input_size);
     libff::leave_block("Generate R1CS example");
 
     libff::print_header("(enter) Profile R1CS GG-KZG10");
