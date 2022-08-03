@@ -33,7 +33,9 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
 
     libff::enter_block("Call to run_kzg");
 
-    int t = 1000;
+    /* Degree of Polynomial t */
+
+    int t = 100000;
 
     /* Generate Polynomial to Commit: we need to put Convolution Poly. in this section */
 
