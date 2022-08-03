@@ -24,13 +24,7 @@ namespace libsnark {
 /**
  * The code below provides an example of all stages of running a Kate Commitment.
  *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which generatrs t-SDH tuple, polynomial to prove, and random evaluation point.
- *
- * (2) The "committer", which runs the Commitment on input the commitment key,
- *
- * (3) The "verifier", which runs the VfyEval on input the commitment key, commitment, and witness.
+ * This is the version we use for the DEMO CHECK
  */
 template<typename ppT>
 bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
@@ -39,29 +33,46 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
     libff::enter_block("Call to run_kzg");
 
     int i;
-    int t = 5;
+    int t = 10000;
 
     /* Generate Polynomial to Commit: we need to put Convolution Poly. in this section */
 
     libff::print_header("Make Polynomial");
 
-    libff::Fr_vector<ppT> poly;
+    libff::Fr_vector<ppT> poly(t);
+
     for(i = 0; i < t; i++) {
         libff::Fr<ppT> random = libff::Fr<ppT>::random_element();
-        poly.emplace_back(random);
-        // random.print();
+        poly[i] = random;
+        // poly[i].print();
     }
-
-    // libff::Fr_vector<ppT> poly2;
-
+    // poly[0] = convert<ppT>(1);
+    // poly[2] = convert<ppT>(-1);
     // for(i = 0; i < t; i++) {
-    //     poly2.emplace_back(poly[i]);
+    //     poly[i].print();
     // }
+
+//    poly[0] = convert<>
+//     poly.emplace_back(convert<ppT>(1));
+//     poly.emplace_back(convert<ppT>(0));
+//     poly.emplace_back(convert<ppT>(21888242871839275222246405745257275088548364400416034343698204186575808495616));
+//     poly.emplace_back(convert<ppT>(21888242871839275222246405745257275088548364400416034343698204186575808495616));
+
+    // poly[3].print();
+    // poly[0] = convert<ppT>(1);
+
+
+    libff::Fr_vector<ppT> poly2(t);
+
+    for(i = 0; i < t; i++) {
+        poly2[i] = poly[i];
+    }
 
     /* Generate Random Point for Evaluation */
 
     libff::print_header("Generate Random point");
     libff::Fr<ppT> point = libff::Fr<ppT>::random_element();
+    // libff::Fr<ppT> point = convert<ppT>(1);
     point.print();
 
     /* Generate t-SDH tuple, and select secret randomness t */
@@ -73,7 +84,7 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
     /* Commit Polynomial into Product: G1-element */
 
     libff::print_header("Commit Polynomial");
-    libff::G1<ppT> commit = kzg_commit<ppT>(ck, poly, t);
+    commitment<ppT> commit = kzg_commit<ppT>(ck, poly, t);
     printf("\n"); libff::print_indent(); libff::print_mem("after commit");
 
     /* Generate witness of the evaluation + Evaluate the Polynomial */
@@ -88,9 +99,9 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
     printf("\n"); libff::print_indent(); libff::print_mem("after vfyeval");
 
     /* Verify evaluation TEST-DEMO*/
-    // libff::print_header("Verify TEST-Logical Error");
-    // bool testresult = kzg_testvfy<ppT>(ck, commit, wit, poly2);
-    // printf("\n"); libff::print_indent(); libff::print_mem("after testvfy");
+    libff::print_header("Verify TEST-Logical Error");
+    bool testresult = kzg_testvfy<ppT>(ck, commit, wit, poly2, t);
+    printf("\n"); libff::print_indent(); libff::print_mem("after testvfy");
 
     libff::leave_block("Call to run_kzg");
     return verifyevaluation;
@@ -99,6 +110,87 @@ bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
     poly.clear();
     point.clear();
 }
+
+// /**
+//  * The code below provides an example of all stages of running a Kate Commitment.
+//  *
+//  * Of course, in a real-life scenario, we would have three distinct entities,
+//  * mangled into one in the demonstration below. The three entities are as follows.
+//  * (1) The "generator", which generatrs t-SDH tuple, polynomial to prove, and random evaluation point.
+//  *
+//  * (2) The "committer", which runs the Commitment on input the commitment key,
+//  *
+//  * (3) The "verifier", which runs the VfyEval on input the commitment key, commitment, and witness.
+//  */
+// template<typename ppT>
+// bool run_kzg(const r1cs_example<libff::Fr<ppT> > &example,
+//                         const bool test_serialization)
+// {
+//     libff::enter_block("Call to run_kzg");
+
+//     int i;
+//     int t = 17;
+
+//     /* Generate Polynomial to Commit: we need to put Convolution Poly. in this section */
+
+//     libff::print_header("Make Polynomial");
+
+//     libff::Fr_vector<ppT> poly;
+//     for(i = 0; i < t; i++) {
+//         libff::Fr<ppT> random = libff::Fr<ppT>::random_element();
+//         poly.emplace_back(random);
+//         // random.print();
+//     }
+
+//     poly.emplace_back(convert<ppT>(number));
+
+//     libff::Fr_vector<ppT> poly2;
+
+//     for(i = 0; i < t; i++) {
+//         poly2.emplace_back(poly[i]);
+//     }
+
+//     /* Generate Random Point for Evaluation */
+
+//     libff::print_header("Generate Random point");
+//     libff::Fr<ppT> point = libff::Fr<ppT>::random_element();
+//     point.print();
+
+//     /* Generate t-SDH tuple, and select secret randomness t */
+
+//     libff::print_header("Generate Key: t-SDH Tuple");
+//     commitkey<ppT> ck = kzg_setup<ppT>(t);
+//     printf("\n"); libff::print_indent(); libff::print_mem("after setup");
+
+//     /* Commit Polynomial into Product: G1-element */
+
+//     libff::print_header("Commit Polynomial");
+//     libff::G1<ppT> commit = kzg_commit<ppT>(ck, poly, t);
+//     printf("\n"); libff::print_indent(); libff::print_mem("after commit");
+
+//     /* Generate witness of the evaluation + Evaluate the Polynomial */
+
+//     libff::print_header("Create Witness");
+//     witness<ppT> wit = kzg_witness<ppT>(ck, poly, point, t);
+//     printf("\n"); libff::print_indent(); libff::print_mem("after create-witness");
+
+//     /* Verify evaluation */
+//     libff::print_header("Verify Evaluation of Polynomial");
+//     bool verifyevaluation = kzg_vfyeval<ppT>(ck, commit, wit);
+//     printf("\n"); libff::print_indent(); libff::print_mem("after vfyeval");
+
+//     /* Verify evaluation TEST-DEMO*/
+//     libff::print_header("Verify TEST-Logical Error");
+//     bool testresult = kzg_testvfy<ppT>(ck, commit, wit, poly2);
+//     printf("\n"); libff::print_indent(); libff::print_mem("after testvfy");
+
+//     libff::leave_block("Call to run_kzg");
+//     return verifyevaluation;
+
+//     //clear all
+//     poly.clear();
+//     point.clear();
+// }
 
 } // libsnark
 #endif // RUN_KZG_TCC_
